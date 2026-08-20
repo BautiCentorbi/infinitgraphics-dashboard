@@ -137,10 +137,33 @@ Paso 3 (workspace mínimo por cliente) también **completo y deployado**:
 - Todo en `/admin/[slug]`, scoped por cliente. Probado en local (lógica +
   verificación manual de Bautista en navegador) antes de pushear.
 
-Próximo paso de producto (paso 4 del orden de implementación): CRUD del
-calendario editorial (`ContentPiece`) y su vista de calendario, todavía
-desde `/admin` (la vista de cliente en `/c/[slug]` con login y comentarios
-es el paso 5, después de este).
+Paso 4 (calendario editorial) también **completo y deployado**, en
+`/admin/[slug]/calendar`:
+
+- **Decisión de arquitectura:** se construyó sobre la propia base (Postgres),
+  no sobre la API de Notion — se evaluó explícitamente y se descartó, para
+  no partir el modelo de datos (login de clientes, comentarios, aprobación)
+  entre dos sistemas. Ver charla del 2026-08-20 si hace falta retomar esto.
+- Modelo ampliado: `Topic` (categorías fijas por cliente, dropdown, no texto
+  libre) + `ContentPiece.hashtags`.
+- **3 vistas:** Calendario (grilla mensual, drag & drop entre días para
+  reprogramar), Kanban (columnas por estado, drag & drop para cambiar
+  estado — deja registro en `ApprovalEvent`), Lista (tabla con filtros por
+  plataforma/estado/tema).
+- Modal de crear/editar pieza con todos los campos (plataforma, fecha, copy,
+  hashtags, tema, URL de media — todavía sin upload real, ver pendientes).
+- Gestión de temas inline (agregar/borrar) por cliente.
+- Librería usada para drag & drop: `@dnd-kit/core`.
+- Probado: lógica de negocio contra Neon (creación, reprogramado, cambio de
+  estado con auditoría, `SetNull` al borrar tema, cascada al borrar
+  cliente) + verificación manual de Bautista en navegador (encontró un bug
+  de caché real — el dev server tenía el cliente de Prisma viejo en memoria
+  de antes de la migración de `Topic`; se resolvió reiniciando `npm run dev`
+  después de `prisma generate`, no era un bug de código).
+
+Próximo paso de producto (paso 5 del orden de implementación): login de
+cliente + vista `/c/[slug]` de solo lectura del calendario, con comentarios
+y aprobación (`Comment`, cambios de `status` desde el lado del cliente).
 
 ### Pendiente operativo (no bloquea seguir developeando)
 
