@@ -294,6 +294,35 @@ internas como rich_text separado del Copy):
 - Formato y Notas internas también están en el modal de edición, el hover-
   preview, y (Formato) como columna en la vista Lista.
 
+### Editar estado desde cualquier vista + revisión del cliente en "programado" (2026-08-21)
+
+- **`updateContentPiece`** (el submit del modal) ahora también guarda el
+  estado — antes el estado solo cambiaba arrastrando en el kanban
+  (`changePieceStatus`). Deja el mismo registro en `ApprovalEvent` que el
+  drag&drop, y solo si el estado realmente cambió (no genera eventos de
+  auditoría de más al guardar sin tocarlo).
+- **`StatusPicker.tsx`**: reemplaza el `<select>` nativo que se usaba para
+  el estado. Motivo: los `<option>` de un select no se pueden colorear de
+  forma confiable entre navegadores — terminaban con texto casi invisible
+  sobre el fondo blanco que el navegador les pone por default. Es un menú
+  propio (con `motion` para la animación de apertura) que reusa las mismas
+  clases `.status-*`. Usado en 3 lugares: el popover de hover
+  (Calendario/Kanban — cambia al instante, sin abrir nada), la columna
+  Estado de la vista Lista (ídem, con `stopPropagation` para no disparar el
+  click de la fila), y el modal de edición (ahí es distinto: va como
+  `<input type="hidden">` + estado de React, se guarda recién al tocar
+  "Guardar" junto con el resto de los campos — no al instante como en los
+  otros dos, para ser consistente con cómo se comporta el resto del form).
+- **Cliente:** ahora puede aprobar/pedir cambios también en piezas
+  `scheduled` (programado), no solo `in_review`/`changes_requested`.
+  `approved`/`published` siguen siendo de solo-comentario. `draft` sigue
+  oculto para el cliente (sin cambios — decisión reconfirmada con
+  Bautista, no revertir esto sin volver a preguntar).
+- **`motion`** (ex Framer Motion) instalada — animaciones de entrada/salida
+  en el popover de hover, el modal, el menú "Tarjetas", y transición al
+  cambiar de vista en el calendario. Usar esta librería (no otra) si se
+  agregan más animaciones — ya está integrada y es la que Bautista pidió.
+
 ### Nota: warning de SSL de `pg` (resuelto 2026-08-21)
 
 El warning "SECURITY WARNING: The SSL modes 'prefer', 'require'..." que
