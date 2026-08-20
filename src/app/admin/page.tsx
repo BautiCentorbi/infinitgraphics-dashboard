@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { signOutAction } from "./actions";
+import { NewClientForm } from "./NewClientForm";
+import { ClientRow } from "./ClientRow";
 
 // Siempre dinámico: lee la lista de clientes en vivo, no tiene sentido
 // prerenderizarla estáticamente (y el build fallaría sin DB disponible).
@@ -20,22 +21,16 @@ export default async function AdminDashboard() {
         </form>
       </div>
 
+      <NewClientForm />
+
       {clients.length === 0 ? (
         <p className="text-sm text-black/60 dark:text-white/60">
-          Todavía no hay clientes cargados. (El CRUD para agregar clientes es
-          el próximo paso — ver ARCHITECTURE.md, orden de implementación.)
+          Todavía no hay clientes cargados. Agregá el primero arriba.
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
           {clients.map((client) => (
-            <li key={client.id}>
-              <Link
-                href={`/admin/${client.slug}`}
-                className="block rounded border border-black/10 px-4 py-3 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
-              >
-                {client.name}
-              </Link>
-            </li>
+            <ClientRow key={client.id} client={client} />
           ))}
         </ul>
       )}
