@@ -161,9 +161,30 @@ Paso 4 (calendario editorial) también **completo y deployado**, en
   de antes de la migración de `Topic`; se resolvió reiniciando `npm run dev`
   después de `prisma generate`, no era un bug de código).
 
-Próximo paso de producto (paso 5 del orden de implementación): login de
-cliente + vista `/c/[slug]` de solo lectura del calendario, con comentarios
-y aprobación (`Comment`, cambios de `status` desde el lado del cliente).
+Paso 5 (vista de cliente) también **completo y deployado** — con esto el
+**MVP completo está terminado** (los 3 pilares base: workspace + calendario +
+feedback del cliente, ver el orden de implementación en ARCHITECTURE.md):
+
+- Admin: sección "Acceso del cliente" en `/admin/[slug]` para crear/borrar
+  logins de cliente (puede haber más de uno por cliente).
+- `/c/[slug]`: el cliente ve su calendario (oculta piezas en `draft` — solo
+  ve desde "en revisión" en adelante), separado en "pendientes de tu
+  revisión" vs el resto. Puede aprobar / pedir cambios y comentar por pieza.
+- Las server actions del lado cliente re-verifican ownership server-side
+  (no confían solo en el middleware) — un cliente no puede tocar piezas de
+  otro cliente aunque llame la action directo.
+- El admin ahora también ve y responde los comentarios del cliente desde el
+  modal de edición de pieza en `/admin/[slug]/calendar`.
+- Bug real encontrado y arreglado en el camino: `<form>` anidado en
+  `PieceModal` (el botón "Borrar" estaba dentro del form de "Guardar")
+  causaba un hydration error de React — se separaron como forms hermanos,
+  usando el atributo `form=` en el botón "Guardar" para que siga enviando
+  el form principal desde afuera.
+
+**Siguiente pilar del roadmap (no MVP, ver `CLAUDE.md` sección "Prioridad de
+construcción"): analytics multi-plataforma vía Windsor.ai** — recién ahora
+que el workspace/calendario/feedback están andando tiene sentido arrancarlo,
+según el orden que se acordó al principio del proyecto.
 
 ### Pendiente operativo (no bloquea seguir developeando)
 
