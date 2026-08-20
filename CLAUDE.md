@@ -478,6 +478,22 @@ correo):
 Vercel `cm-suite`, además del `cm-suite-delta.vercel.app` de siempre — los
 dos apuntan al mismo deployment).
 
+**Ajustes tras probar en vivo (mismo día):**
+
+- **`notifyAdminsOfClientActivity` manda un mail por admin, no uno solo con
+  todos en "to"** — un único mail con varios destinatarios en el mismo
+  campo aparece en Gmail colapsado como "para mí y N más" (el desplegable
+  que reportó Bautista) y además expone el email de cada admin a los
+  demás. Ahora es `Promise.all` de un `sendEmail` individual por
+  destinatario.
+- **`notifyNewAdmin` ahora incluye la contraseña en el cuerpo del mail**
+  (pedido explícito de Bautista, 2026-08-21) — en un bloque destacado
+  junto al email, con una nota de que conviene guardarlo en un lugar
+  seguro o borrarlo después de entrar. **Es una solución momentánea**: si
+  más adelante se construye un flujo de "elegí tu contraseña" o reseteo
+  propio, hay que sacar la contraseña de acá y mandar en su lugar un link
+  de activación — no dejar las dos cosas conviviendo.
+
 ## Pendiente de definir (no bloqueante, ver detalle en ARCHITECTURE.md)
 
 - Neon vs Vercel Postgres.
