@@ -85,6 +85,27 @@ rutas, orden de implementación). Resumen:
 - **Nombre del proyecto:** sigue siendo `cm-suite` por ahora (placeholder,
   sin apuro por definir nombre de marca).
 
+## Estado actual (2026-08-20)
+
+Scaffold del paso 1 (ver ARCHITECTURE.md, "Orden de implementación") ya está
+hecho y commiteado localmente (git, sin remoto todavía):
+
+- Next.js + TypeScript + Tailwind + Prisma (schema completo del MVP) +
+  NextAuth (login admin/client, rutas protegidas) — build pasa limpio.
+- **Falta antes de poder correr la app de verdad:**
+  1. Crear la base de datos Neon (Vercel → Storage → Create Database → Neon
+     Postgres, o `npx create-db`) y pegar la connection string real en
+     `DATABASE_URL` dentro de `.env` (hoy tiene el placeholder de
+     create-next-app).
+  2. Completar `ADMIN_PASSWORD` en `.env` (el email admin ya está puesto:
+     `bcentorbi.designer@gmail.com`).
+  3. Correr `npx prisma migrate dev --name init` para crear las tablas.
+  4. Correr `npm run db:seed` para crear el usuario admin.
+  5. `npm run dev` y entrar a `/login`.
+- Sin remoto de GitHub/Vercel todavía — el repo es local por ahora.
+- Próximo paso de producto (paso 2 del orden de implementación): CRUD de
+  clientes desde `/admin`.
+
 ## Pendiente de definir (no bloqueante, ver detalle en ARCHITECTURE.md)
 
 - Neon vs Vercel Postgres.
