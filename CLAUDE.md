@@ -323,6 +323,35 @@ internas como rich_text separado del Copy):
   cambiar de vista en el calendario. Usar esta librería (no otra) si se
   agregan más animaciones — ya está integrada y es la que Bautista pidió.
 
+### Sidebar flotante del panel admin (2026-08-21)
+
+Reemplaza el viejo `AdminNav` (top bar). Vive en `src/components/Sidebar.tsx`
++ `src/app/admin/layout.tsx` (shell compartido por todo `/admin/*` — fetch de
+clientes ahí, no en cada página).
+
+- **Isla flotante**: separada de los bordes de la ventana (`GAP=12px`), no
+  pegada a la pared. Se expande sobre el contenido (no lo empuja) al hover o
+  al fijarla con el **pin** (grande, siempre visible, con label "Fijar
+  menú"/"Fijado" — persistido en localStorage `cm-suite:sidebar-pinned`).
+- **4 secciones de panel** (`TOP_NAV` en Sidebar.tsx): Clientes (la lista de
+  siempre, con sub-items Workspace/Tareas/Documentación/Notas — anchors
+  dentro de la misma página, ver ids en `admin/[slug]/page.tsx` — y
+  Calendario), **Métricas**, **Calendarios** (vista general multi-cliente
+  con filtro), **Configuración** (administradores del equipo). Las últimas 3
+  son páginas "Próximamente" (`src/components/ComingSoon.tsx`) — Bautista
+  las va a pedir una por una más adelante, esto solo dejó el lugar en la
+  navegación.
+- **`RESERVED_SLUGS`** en `src/lib/slug.ts` (`metrics`, `calendars`,
+  `settings`): un cliente nunca puede terminar con uno de estos slugs — si
+  no, la ruta estática de esa sección le taparía el acceso a su propio
+  workspace en `/admin/[slug]`. Si se agrega una sección nueva bajo
+  `/admin/<algo>`, sumar `<algo>` a esta lista.
+- **`Client.avatarUrl`**: foto de perfil real por cliente, mismo patrón de
+  Blob que `Document` (`ClientAvatarUpload.tsx`, sube desde
+  `/admin/[slug]`). Si no hay foto, cae al gradiente+iniciales de siempre
+  (`src/lib/avatar.ts`, compartido entre `ClientRow` y `Sidebar` para que el
+  mismo cliente tenga el mismo color en los dos lados).
+
 ### Nota: warning de SSL de `pg` (resuelto 2026-08-21)
 
 El warning "SECURITY WARNING: The SSL modes 'prefer', 'require'..." que
