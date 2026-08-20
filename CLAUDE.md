@@ -218,6 +218,25 @@ código.
   artifact de Claude Design — sirve de referencia visual si hay que diseñar
   pantallas nuevas (analytics) en la misma identidad.
 
+### Micro-interacciones del calendario (2026-08-21)
+
+- **Hover-preview** (`PiecePreview.tsx`): en Calendario/Kanban, hacer hover
+  sobre una pieza (con delay de 300ms para no titilar) muestra un popover
+  con todo el detalle — copy, hashtags, tema, estado, cantidad de
+  comentarios — y un botón "Editar" directo. Posicionado con
+  `position: fixed` calculado del `getBoundingClientRect()` del elemento
+  (así escapa el `overflow:hidden` de la grilla del calendario y las
+  columnas del kanban, que si no lo recortarían).
+- **Click ya no abre el modal directo** en Calendario/Kanban: navega a la
+  vista Lista y resalta esa fila (scroll + flash de fondo). Para editar:
+  desde el botón del hover-preview, o con click directo sobre la fila en la
+  propia Lista (ahí sí abre el modal, sin cambios).
+- **Filtros compartidos** (`FilterBar.tsx`): plataforma/estado/tema, subidos
+  de `ListView` a `CalendarApp` — filtran las 3 vistas, no solo la Lista.
+- Acciones de `NoteItem`/`TaskItem` (editar/borrar) ahora aparecen solo al
+  hover (mismo patrón que ya tenía `ClientRow` en el dashboard de
+  clientes) — consistencia general de microinteracciones en toda la app.
+
 ### Pendiente operativo (no bloquea seguir developeando)
 
 - Conectar GitHub↔Vercel para auto-deploy (Bautista lo hace desde la web).
