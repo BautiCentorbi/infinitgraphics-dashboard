@@ -1,12 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { CalendarView } from "./CalendarView";
 import { KanbanView } from "./KanbanView";
 import { ListView } from "./ListView";
 import { PieceModal } from "./PieceModal";
+import { PiecePreview } from "./PiecePreview";
+import { FilterBar } from "./FilterBar";
 import { TopicManager } from "./TopicManager";
 import { reschedulePiece, changePieceStatus } from "./actions";
 import type { ContentStatus } from "@/generated/prisma/enums";
@@ -35,9 +37,58 @@ export function CalendarApp({
   useEffect(() => {
     setPieces(initialPieces);
   }, [initialPieces]);
+
   const [modal, setModal] = useState<
     { mode: "create"; defaultDate?: string } | { mode: "edit"; piece: Piece } | null
   >(null);
+
+  // Filtros por propiedades, compartidos por las 3 vistas.
+  const [platformFilter, setPlatformFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [topicFilter, setTopicFilter] = useState("");
+  const filteredPieces = useMemo(
+    () =>
+      pieces
+        .filter((p) => !platformFilter || p.platform === platformFilter)
+        .filter((p) => !statusFilter || p.status === statusFilter)
+        .filter((p) => !topicFilter || p.topicId === topicFilter),
+    [pieces, platformFilter, statusFilter, topicFilter]
+  );
+
+  // Preview al hover: Calendario/Kanban muestran el detalle completo sin
+  // click, con delay de entrada/salida para que no titile al pasar el
+  // mouse y para poder mover el cursor hacia el propio popover (el botón
+  // "Editar" vive ahí).
+  const [preview, setPreview] = useState<{ piece: Piece; rect: DOMRect } | null>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showPreview(piece: Piece, rect: DOMRect) {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    setPreview({ piece, rect });
+  }
+  function scheduleHidePreview() {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setPreview(null), 150);
+  }
+  function cancelHidePreview() {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+  }
+
+  // Click en una pieza desde Calendario/Kanban: navega a la Lista y la
+  // resalta ahí, en vez de abrir el modal de edición directo — para editar
+  // se usa el botón "Editar" del preview al hover, o el click desde la
+  // propia Lista.
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  function jumpToList(piece: Piece) {
+    setPreview(null);
+    setView("list");
+    setHighlightId(piece.id);
+  }
+
+  function openEdit(piece: Piece) {
+    setPreview(null);
+    setModal({ mode: "edit", piece });
+  }
 
   function closeModal() {
     setModal(null);
@@ -87,37 +138,63 @@ export function CalendarApp({
         <div className="tabs">
           <div className="tab-indicator" style={{ width: TAB_W, transform: `translateX(${activeIdx * TAB_W}px)` }} />
           {tabs.map((t) => (
-            <div key={t.key} className="tab" data-active={view === t.key} style={{ width: TAB_W, textAlign: "center" }} onClick={() => setView(t.key)}>
+            <div
+              key={t.key}
+              className="tab"
+              data-active={view === t.key}
+              style={{ width: TAB_W, textAlign: "center" }}
+              onClick={() => setView(t.key)}
+            >
               {t.label}
             </div>
           ))}
         </div>
         <button onClick={() => setModal({ mode: "create" })} className="btn-grad">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
           Nueva pieza
         </button>
       </div>
 
       <TopicManager clientId={clientId} slug={slug} topics={initialTopics} />
 
+      <FilterBar
+        topics={initialTopics}
+        platformFilter={platformFilter}
+        statusFilter={statusFilter}
+        topicFilter={topicFilter}
+        onPlatformChange={setPlatformFilter}
+        onStatusChange={setStatusFilter}
+        onTopicChange={setTopicFilter}
+      />
+
       <DndContext onDragEnd={handleDragEnd}>
         {view === "calendar" && (
           <CalendarView
-            pieces={pieces}
-            onPieceClick={(p) => setModal({ mode: "edit", piece: p })}
+            pieces={filteredPieces}
+            onPieceClick={jumpToList}
             onEmptyClick={(dateKey) => setModal({ mode: "create", defaultDate: dateKey })}
+            onHoverStart={showPreview}
+            onHoverEnd={scheduleHidePreview}
           />
         )}
         {view === "kanban" && (
-          <KanbanView pieces={pieces} onPieceClick={(p) => setModal({ mode: "edit", piece: p })} />
+          <KanbanView pieces={filteredPieces} onPieceClick={jumpToList} onHoverStart={showPreview} onHoverEnd={scheduleHidePreview} />
         )}
       </DndContext>
 
       {view === "list" && (
-        <ListView
-          pieces={pieces}
-          topics={initialTopics}
-          onPieceClick={(p) => setModal({ mode: "edit", piece: p })}
+        <ListView pieces={filteredPieces} onPieceClick={openEdit} highlightId={highlightId} />
+      )}
+
+      {preview && (
+        <PiecePreview
+          piece={preview.piece}
+          anchorRect={preview.rect}
+          onEdit={() => openEdit(preview.piece)}
+          onMouseEnter={cancelHidePreview}
+          onMouseLeave={scheduleHidePreview}
         />
       )}
 

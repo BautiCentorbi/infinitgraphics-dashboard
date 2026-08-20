@@ -10,7 +10,7 @@ export function TaskItem({
   slug: string;
 }) {
   return (
-    <li className="surface flex items-center justify-between gap-2 rounded-[12px] px-3.5 py-2.5">
+    <li className="surface group flex items-center justify-between gap-2 rounded-[12px] px-3.5 py-2.5 transition-colors hover:bg-[var(--surface-2)]">
       <form action={toggleTask} className="flex flex-1 items-center gap-2.5">
         <input type="hidden" name="id" value={task.id} />
         <input type="hidden" name="slug" value={slug} />
@@ -40,7 +40,7 @@ export function TaskItem({
           </span>
         )}
       </form>
-      <form action={deleteTask}>
+      <form action={deleteTask} className="opacity-0 transition-opacity group-hover:opacity-100">
         <input type="hidden" name="id" value={task.id} />
         <input type="hidden" name="slug" value={slug} />
         <button type="submit" className="text-sm" style={{ color: "var(--text-dim)" }}>

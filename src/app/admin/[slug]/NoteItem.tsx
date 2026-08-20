@@ -52,7 +52,7 @@ export function NoteItem({
   }
 
   return (
-    <li className="surface surface-hover card-anim rounded-[14px] p-3.5 transition-colors">
+    <li className="surface surface-hover card-anim group rounded-[14px] p-3.5 transition-colors">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-semibold">{note.title}</p>
@@ -62,7 +62,7 @@ export function NoteItem({
             </p>
           )}
         </div>
-        <div className="flex shrink-0 gap-2.5 text-sm">
+        <div className="flex shrink-0 gap-2.5 text-sm opacity-0 transition-opacity group-hover:opacity-100">
           <button onClick={() => setEditing(true)} style={{ color: "var(--text-dim)" }}>
             Editar
           </button>

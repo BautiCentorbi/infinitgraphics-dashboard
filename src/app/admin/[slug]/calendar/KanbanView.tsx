@@ -10,10 +10,14 @@ function KanbanColumn({
   status,
   pieces,
   onPieceClick,
+  onHoverStart,
+  onHoverEnd,
 }: {
   status: ContentStatus;
   pieces: Piece[];
   onPieceClick: (p: Piece) => void;
+  onHoverStart: (piece: Piece, rect: DOMRect) => void;
+  onHoverEnd: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `status:${status}` });
 
@@ -33,7 +37,7 @@ function KanbanColumn({
       </div>
       <div className="flex flex-col gap-2">
         {pieces.map((p) => (
-          <PieceCard key={p.id} piece={p} onClick={() => onPieceClick(p)} />
+          <PieceCard key={p.id} piece={p} onClick={() => onPieceClick(p)} onHoverStart={onHoverStart} onHoverEnd={onHoverEnd} />
         ))}
       </div>
     </div>
@@ -43,9 +47,13 @@ function KanbanColumn({
 export function KanbanView({
   pieces,
   onPieceClick,
+  onHoverStart,
+  onHoverEnd,
 }: {
   pieces: Piece[];
   onPieceClick: (p: Piece) => void;
+  onHoverStart: (piece: Piece, rect: DOMRect) => void;
+  onHoverEnd: () => void;
 }) {
   return (
     <div className="flex gap-3 overflow-x-auto pb-2">
@@ -55,6 +63,8 @@ export function KanbanView({
           status={status}
           pieces={pieces.filter((p) => p.status === status)}
           onPieceClick={onPieceClick}
+          onHoverStart={onHoverStart}
+          onHoverEnd={onHoverEnd}
         />
       ))}
     </div>

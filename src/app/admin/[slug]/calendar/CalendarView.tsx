@@ -14,12 +14,16 @@ function DayCell({
   inMonth,
   onPieceClick,
   onEmptyClick,
+  onHoverStart,
+  onHoverEnd,
 }: {
   date: Date;
   pieces: Piece[];
   inMonth: boolean;
   onPieceClick: (p: Piece) => void;
   onEmptyClick: (dateKey: string) => void;
+  onHoverStart: (piece: Piece, rect: DOMRect) => void;
+  onHoverEnd: () => void;
 }) {
   const dateKey = toDateKey(date);
   const { setNodeRef, isOver } = useDroppable({ id: dateKey });
@@ -53,7 +57,14 @@ function DayCell({
       </div>
       <div className="flex flex-col gap-1">
         {pieces.map((p) => (
-          <PieceCard key={p.id} piece={p} onClick={() => onPieceClick(p)} compact />
+          <PieceCard
+            key={p.id}
+            piece={p}
+            onClick={() => onPieceClick(p)}
+            onHoverStart={onHoverStart}
+            onHoverEnd={onHoverEnd}
+            compact
+          />
         ))}
       </div>
     </div>
@@ -64,10 +75,14 @@ export function CalendarView({
   pieces,
   onPieceClick,
   onEmptyClick,
+  onHoverStart,
+  onHoverEnd,
 }: {
   pieces: Piece[];
   onPieceClick: (p: Piece) => void;
   onEmptyClick: (dateKey: string) => void;
+  onHoverStart: (piece: Piece, rect: DOMRect) => void;
+  onHoverEnd: () => void;
 }) {
   const [monthCursor, setMonthCursor] = useState(new Date());
   const grid = getMonthGrid(monthCursor);
@@ -118,6 +133,8 @@ export function CalendarView({
             inMonth={sameMonth(date, monthCursor)}
             onPieceClick={onPieceClick}
             onEmptyClick={onEmptyClick}
+            onHoverStart={onHoverStart}
+            onHoverEnd={onHoverEnd}
           />
         ))}
       </div>
