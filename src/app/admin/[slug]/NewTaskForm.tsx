@@ -2,6 +2,7 @@
 
 import { useActionState, useRef } from "react";
 import { createTask, type TaskFormState } from "./actions";
+import { PRIORITIES, PRIORITY_LABELS } from "@/lib/content";
 
 const initialState: TaskFormState = { error: null };
 const inputCls = "rounded-[11px] border bg-black/20 px-3 py-2 text-sm outline-none focus:border-[var(--sky)]";
@@ -32,6 +33,13 @@ export function NewTaskForm({ clientId, slug }: { clientId: string; slug: string
           className={`min-w-0 flex-1 ${inputCls}`}
           style={{ borderColor: "var(--border)", colorScheme: "dark" }}
         />
+        <select name="priority" defaultValue="medium" className={inputCls} style={{ borderColor: "var(--border)" }}>
+          {PRIORITIES.map((p) => (
+            <option key={p} value={p}>
+              {PRIORITY_LABELS[p]}
+            </option>
+          ))}
+        </select>
         <button type="submit" disabled={pending} className="btn-grad shrink-0">
           {pending ? "..." : "Agregar"}
         </button>

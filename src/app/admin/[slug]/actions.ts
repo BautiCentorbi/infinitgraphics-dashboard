@@ -5,6 +5,7 @@ import { del } from "@vercel/blob";
 import bcrypt from "bcryptjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import type { TaskPriority } from "@/generated/prisma/enums";
 
 export type NoteFormState = { error: string | null };
 
@@ -94,6 +95,7 @@ export async function createTask(
   const slug = formData.get("slug") as string;
   const title = (formData.get("title") as string | null)?.trim();
   const dueDateRaw = formData.get("dueDate") as string | null;
+  const priority = (formData.get("priority") as TaskPriority | null) || "medium";
 
   if (!title) return { error: "El título es obligatorio." };
 
@@ -102,6 +104,7 @@ export async function createTask(
       clientId,
       title,
       dueDate: dueDateRaw ? new Date(dueDateRaw) : null,
+      priority,
     },
   });
   revalidatePath(`/admin/${slug}`);
@@ -115,6 +118,11 @@ export async function toggleTask(formData: FormData) {
   if (!id) return;
 
   await prisma.task.update({ where: { id }, data: { done: !done } });
+  revalidatePath(`/admin/${slug}`);
+}
+
+export async function setTaskPriority(id: string, slug: string, priority: TaskPriority) {
+  await prisma.task.update({ where: { id }, data: { priority } });
   revalidatePath(`/admin/${slug}`);
 }
 

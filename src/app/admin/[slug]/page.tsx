@@ -24,7 +24,10 @@ export default async function ClientWorkspacePage({
 
   const [notes, tasks, clientUsers, documents, upcomingPieces, totalPieces, pendingReview] = await Promise.all([
     prisma.note.findMany({ where: { clientId: client.id }, orderBy: { updatedAt: "desc" } }),
-    prisma.task.findMany({ where: { clientId: client.id }, orderBy: [{ done: "asc" }, { dueDate: "asc" }] }),
+    prisma.task.findMany({
+      where: { clientId: client.id },
+      orderBy: [{ done: "asc" }, { priority: "desc" }, { dueDate: "asc" }],
+    }),
     prisma.user.findMany({ where: { clientId: client.id, role: "client" }, select: { id: true, email: true } }),
     prisma.document.findMany({ where: { clientId: client.id }, orderBy: { createdAt: "desc" } }),
     prisma.contentPiece.findMany({

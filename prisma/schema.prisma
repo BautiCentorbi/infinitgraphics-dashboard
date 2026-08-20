@@ -128,14 +128,21 @@ model Document {
   createdAt DateTime @default(now())
 }
 
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
 model Task {
   id       String @id @default(cuid())
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId String
 
-  title   String
-  done    Boolean   @default(false)
-  dueDate DateTime?
+  title    String
+  done     Boolean      @default(false)
+  dueDate  DateTime?
+  priority TaskPriority @default(medium)
 
   createdAt DateTime @default(now())
 }

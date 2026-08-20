@@ -1,4 +1,4 @@
-import type { Platform, ContentStatus, ContentFormat } from "@/generated/prisma/enums";
+import type { Platform, ContentStatus, ContentFormat, TaskPriority } from "@/generated/prisma/enums";
 
 export const PLATFORM_LABELS: Record<Platform, string> = {
   instagram: "Instagram",
@@ -66,3 +66,25 @@ export const CARD_FIELD_LABELS: Record<CardField, string> = {
 // Default razonable: lo que ya se mostraba antes de que esto fuera
 // configurable.
 export const DEFAULT_CARD_FIELDS: CardField[] = ["platform", "status", "topic"];
+
+// Prioridad de tareas.
+export const PRIORITY_LABELS: Record<TaskPriority, string> = {
+  low: "Baja",
+  medium: "Media",
+  high: "Alta",
+};
+
+export const PRIORITIES = Object.keys(PRIORITY_LABELS) as TaskPriority[];
+
+export const PRIORITY_COLOR: Record<TaskPriority, string> = {
+  low: "var(--text-faint)",
+  medium: "var(--sky)",
+  high: "var(--amber)",
+};
+
+// Orden para ordenar tareas por urgencia (alta primero).
+export const PRIORITY_ORDER: Record<TaskPriority, number> = {
+  high: 0,
+  medium: 1,
+  low: 2,
+};
