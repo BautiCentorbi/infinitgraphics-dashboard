@@ -272,6 +272,28 @@ código.
   espacio, y evitar grids `sm:grid-cols-N` dentro de columnas que ya son
   la mitad del ancho).
 
+### Tarjetas configurables + Formato/Notas internas (2026-08-21)
+
+A pedido de Bautista (inspirado en el viejo esquema de Notion de CDS —
+`CDS-Script-Notion/build_notion.py`, que tenía Formato como select y Notas
+internas como rich_text separado del Copy):
+
+- **`ContentPiece.format`** (enum `ContentFormat`, opcional): Carrusel /
+  Post imagen / Reel / Video / Story / Texto / Otro.
+- **`ContentPiece.internalNotes`** (texto, opcional): notas que **solo ve el
+  admin** — nunca se serializan ni se mandan a `/c/[slug]` (a propósito, ver
+  `src/app/c/[slug]/types.ts` y `page.tsx` — no tienen este campo).
+- **Tarjetas configurables** (`CardFieldsMenu.tsx` + `useCardFields` en
+  `src/lib/content.ts`): qué propiedades se muestran en las tarjetas de
+  Calendario/Kanban (plataforma, estado, tema, formato, hashtags,
+  comentarios, notas internas) es elegible desde un menú "Tarjetas" al lado
+  de los filtros. **Se persiste en `localStorage`, no en la base** — es una
+  preferencia de visualización personal/del navegador, no un dato del
+  cliente. Kanban oculta "estado" automáticamente aunque esté tildado (ya
+  está implícito en la columna).
+- Formato y Notas internas también están en el modal de edición, el hover-
+  preview, y (Formato) como columna en la vista Lista.
+
 ### Nota: warning de SSL de `pg` (resuelto 2026-08-21)
 
 El warning "SECURITY WARNING: The SSL modes 'prefer', 'require'..." que
