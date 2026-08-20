@@ -32,6 +32,16 @@ enum ContentStatus {
   published
 }
 
+enum ContentFormat {
+  carousel
+  image_post
+  reel
+  video
+  story
+  text
+  other
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -136,12 +146,18 @@ model ContentPiece {
   clientId String
 
   platform      Platform
+  format        ContentFormat?
   scheduledDate DateTime
   title         String
   copy          String        @db.Text
   hashtags      String?
   mediaUrl      String?
   status        ContentStatus @default(draft)
+
+  // Solo visible del lado admin — nunca se manda a /c/[slug]. Para
+  // recordatorios de producción ("pedirle al fotógrafo la vertical",
+  // "ojo que este texto lo pidió el dueño"), no para el cliente.
+  internalNotes String? @db.Text
 
   topic   Topic?  @relation(fields: [topicId], references: [id], onDelete: SetNull)
   topicId String?

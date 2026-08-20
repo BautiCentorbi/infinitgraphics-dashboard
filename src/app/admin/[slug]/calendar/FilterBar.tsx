@@ -27,7 +27,7 @@ export function FilterBar({
   const activeCount = [platformFilter, statusFilter, topicFilter].filter(Boolean).length;
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <select value={platformFilter} onChange={(e) => onPlatformChange(e.target.value)} className={selectCls} style={{ color: "var(--text-dim)" }}>
         <option value="">Todas las plataformas</option>
         {PLATFORMS.map((p) => (

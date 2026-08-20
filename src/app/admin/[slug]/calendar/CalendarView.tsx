@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { getMonthGrid, toDateKey, sameMonth } from "@/lib/calendarGrid";
 import { PieceCard } from "./PieceCard";
+import type { CardField } from "@/lib/content";
 import type { Piece } from "./types";
 
 const WEEKDAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
@@ -16,6 +17,7 @@ function DayCell({
   onEmptyClick,
   onHoverStart,
   onHoverEnd,
+  cardFields,
 }: {
   date: Date;
   pieces: Piece[];
@@ -24,6 +26,7 @@ function DayCell({
   onEmptyClick: (dateKey: string) => void;
   onHoverStart: (piece: Piece, rect: DOMRect) => void;
   onHoverEnd: () => void;
+  cardFields: CardField[];
 }) {
   const dateKey = toDateKey(date);
   const { setNodeRef, isOver } = useDroppable({ id: dateKey });
@@ -63,6 +66,7 @@ function DayCell({
             onClick={() => onPieceClick(p)}
             onHoverStart={onHoverStart}
             onHoverEnd={onHoverEnd}
+            visibleFields={cardFields}
             compact
           />
         ))}
@@ -77,12 +81,14 @@ export function CalendarView({
   onEmptyClick,
   onHoverStart,
   onHoverEnd,
+  cardFields,
 }: {
   pieces: Piece[];
   onPieceClick: (p: Piece) => void;
   onEmptyClick: (dateKey: string) => void;
   onHoverStart: (piece: Piece, rect: DOMRect) => void;
   onHoverEnd: () => void;
+  cardFields: CardField[];
 }) {
   const [monthCursor, setMonthCursor] = useState(new Date());
   const grid = getMonthGrid(monthCursor);
@@ -135,6 +141,7 @@ export function CalendarView({
             onEmptyClick={onEmptyClick}
             onHoverStart={onHoverStart}
             onHoverEnd={onHoverEnd}
+            cardFields={cardFields}
           />
         ))}
       </div>

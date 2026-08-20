@@ -1,4 +1,4 @@
-import type { Platform, ContentStatus } from "@/generated/prisma/enums";
+import type { Platform, ContentStatus, ContentFormat } from "@/generated/prisma/enums";
 
 export const PLATFORM_LABELS: Record<Platform, string> = {
   instagram: "Instagram",
@@ -32,3 +32,37 @@ export const STATUS_CLASS: Record<ContentStatus, string> = {
   scheduled: "status-scheduled",
   published: "status-published",
 };
+
+// Formato de la pieza — opcional (no siempre está decidido en etapa de
+// borrador).
+export const FORMAT_LABELS: Record<ContentFormat, string> = {
+  carousel: "Carrusel",
+  image_post: "Post imagen",
+  reel: "Reel",
+  video: "Video",
+  story: "Story",
+  text: "Texto",
+  other: "Otro",
+};
+
+export const FORMATS = Object.keys(FORMAT_LABELS) as ContentFormat[];
+
+// Propiedades que se pueden mostrar/ocultar en las tarjetas de
+// Calendario/Kanban — configurable por el usuario (ver CardFieldsMenu).
+// "title" no está acá porque siempre se muestra.
+export const CARD_FIELDS = ["platform", "status", "topic", "format", "hashtags", "comments", "internalNotes"] as const;
+export type CardField = (typeof CARD_FIELDS)[number];
+
+export const CARD_FIELD_LABELS: Record<CardField, string> = {
+  platform: "Plataforma",
+  status: "Estado",
+  topic: "Tema",
+  format: "Formato",
+  hashtags: "Hashtags",
+  comments: "Comentarios",
+  internalNotes: "Notas internas",
+};
+
+// Default razonable: lo que ya se mostraba antes de que esto fuera
+// configurable.
+export const DEFAULT_CARD_FIELDS: CardField[] = ["platform", "status", "topic"];

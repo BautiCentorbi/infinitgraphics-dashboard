@@ -8,7 +8,7 @@ import {
   addAdminComment,
   type PieceFormState,
 } from "./actions";
-import { PLATFORMS, PLATFORM_LABELS, STATUSES, STATUS_LABELS } from "@/lib/content";
+import { PLATFORMS, PLATFORM_LABELS, STATUSES, STATUS_LABELS, FORMATS, FORMAT_LABELS } from "@/lib/content";
 import type { Piece, TopicOption } from "./types";
 
 const initialState: PieceFormState = { error: null };
@@ -83,6 +83,20 @@ export function PieceModal({
             </label>
 
             <label className={`flex-1 ${labelCls}`} style={{ color: "var(--text-dim)" }}>
+              Formato <span className="font-normal normal-case" style={{ color: "var(--text-faint)" }}>(opcional)</span>
+              <select name="format" defaultValue={piece?.format ?? ""} className={inputCls} style={{ borderColor: "var(--border)" }}>
+                <option value="">Sin definir</option>
+                {FORMATS.map((f) => (
+                  <option key={f} value={f}>
+                    {FORMAT_LABELS[f]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="flex gap-3">
+            <label className={`flex-1 ${labelCls}`} style={{ color: "var(--text-dim)" }}>
               Fecha
               <input
                 name="scheduledDate"
@@ -93,11 +107,9 @@ export function PieceModal({
                 style={{ borderColor: "var(--border)", colorScheme: "dark" }}
               />
             </label>
-          </div>
 
-          <div className="flex gap-3">
             <label className={`flex-1 ${labelCls}`} style={{ color: "var(--text-dim)" }}>
-              Tema
+              Tema <span className="font-normal normal-case" style={{ color: "var(--text-faint)" }}>(opcional)</span>
               <select name="topicId" defaultValue={piece?.topicId ?? ""} className={inputCls} style={{ borderColor: "var(--border)" }}>
                 <option value="">Sin tema</option>
                 {topics.map((t) => (
@@ -107,26 +119,26 @@ export function PieceModal({
                 ))}
               </select>
             </label>
-
-            {piece && (
-              <label className={`flex-1 ${labelCls}`} style={{ color: "var(--text-dim)" }}>
-                Estado
-                <select
-                  name="status"
-                  defaultValue={piece.status}
-                  disabled
-                  className={inputCls}
-                  style={{ borderColor: "var(--border)", color: "var(--text-faint)" }}
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {STATUS_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
           </div>
+
+          {piece && (
+            <label className={labelCls} style={{ color: "var(--text-dim)" }}>
+              Estado
+              <select
+                name="status"
+                defaultValue={piece.status}
+                disabled
+                className={inputCls}
+                style={{ borderColor: "var(--border)", color: "var(--text-faint)" }}
+              >
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <label className={labelCls} style={{ color: "var(--text-dim)" }}>
             Copy
@@ -134,7 +146,7 @@ export function PieceModal({
           </label>
 
           <label className={labelCls} style={{ color: "var(--text-dim)" }}>
-            Hashtags
+            Hashtags <span className="font-normal normal-case" style={{ color: "var(--text-faint)" }}>(opcional)</span>
             <input
               name="hashtags"
               defaultValue={piece?.hashtags ?? ""}
@@ -145,11 +157,23 @@ export function PieceModal({
           </label>
 
           <label className={labelCls} style={{ color: "var(--text-dim)" }}>
-            URL de imagen/video (opcional)
+            URL de imagen/video <span className="font-normal normal-case" style={{ color: "var(--text-faint)" }}>(opcional)</span>
             <input
               name="mediaUrl"
               defaultValue={piece?.mediaUrl ?? ""}
               placeholder="https://..."
+              className={inputCls}
+              style={{ borderColor: "var(--border)" }}
+            />
+          </label>
+
+          <label className={labelCls} style={{ color: "var(--amber)" }}>
+            Notas internas <span className="font-normal normal-case" style={{ color: "var(--text-faint)" }}>(opcional — solo vos la ves, el cliente no)</span>
+            <textarea
+              name="internalNotes"
+              defaultValue={piece?.internalNotes ?? ""}
+              rows={2}
+              placeholder="Recordatorios de producción, pendientes..."
               className={inputCls}
               style={{ borderColor: "var(--border)" }}
             />

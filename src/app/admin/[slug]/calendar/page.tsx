@@ -35,11 +35,13 @@ export default async function ClientCalendarPage({
     id: p.id,
     title: p.title,
     platform: p.platform,
+    format: p.format,
     scheduledDate: p.scheduledDate.toISOString(),
     copy: p.copy,
     hashtags: p.hashtags,
     mediaUrl: p.mediaUrl,
     status: p.status,
+    internalNotes: p.internalNotes,
     topicId: p.topicId,
     topic: p.topic,
     comments: p.comments.map((c) => ({

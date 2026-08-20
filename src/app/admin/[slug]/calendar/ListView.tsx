@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PLATFORM_LABELS, STATUS_LABELS, STATUS_CLASS } from "@/lib/content";
+import { PLATFORM_LABELS, STATUS_LABELS, STATUS_CLASS, FORMAT_LABELS } from "@/lib/content";
 import type { Piece } from "./types";
 
 export function ListView({
@@ -31,7 +31,7 @@ export function ListView({
       <table className="w-full min-w-[640px] text-left text-[13.5px]">
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border)" }}>
-            {["Fecha", "Título", "Plataforma", "Tema", "Estado", "Hashtags"].map((h) => (
+            {["Fecha", "Título", "Plataforma", "Formato", "Tema", "Estado", "Hashtags"].map((h) => (
               <th key={h} className="pt-0 pr-2 pb-2.5 text-[10.5px] font-bold tracking-wide uppercase" style={{ color: "var(--text-faint)" }}>
                 {h}
               </th>
@@ -55,6 +55,7 @@ export function ListView({
               </td>
               <td className="py-3 pr-2 font-semibold" style={{ borderTop: "1px solid var(--border)" }}>{p.title}</td>
               <td className="py-3 pr-2" style={{ borderTop: "1px solid var(--border)", color: "var(--text-dim)" }}>{PLATFORM_LABELS[p.platform]}</td>
+              <td className="py-3 pr-2" style={{ borderTop: "1px solid var(--border)", color: "var(--text-dim)" }}>{p.format ? FORMAT_LABELS[p.format] : "—"}</td>
               <td className="py-3 pr-2" style={{ borderTop: "1px solid var(--border)" }}>{p.topic?.name ?? "—"}</td>
               <td className="py-3 pr-2" style={{ borderTop: "1px solid var(--border)" }}>
                 <span className={`status-pill ${STATUS_CLASS[p.status]}`}>
@@ -67,7 +68,7 @@ export function ListView({
           ))}
           {sorted.length === 0 && (
             <tr>
-              <td colSpan={6} className="py-6 text-center" style={{ color: "var(--text-faint)" }}>
+              <td colSpan={7} className="py-6 text-center" style={{ color: "var(--text-faint)" }}>
                 Sin resultados.
               </td>
             </tr>

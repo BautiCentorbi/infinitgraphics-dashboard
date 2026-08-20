@@ -4,6 +4,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { STATUSES, STATUS_LABELS } from "@/lib/content";
 import { PieceCard } from "./PieceCard";
 import type { ContentStatus } from "@/generated/prisma/enums";
+import type { CardField } from "@/lib/content";
 import type { Piece } from "./types";
 
 function KanbanColumn({
@@ -12,14 +13,19 @@ function KanbanColumn({
   onPieceClick,
   onHoverStart,
   onHoverEnd,
+  cardFields,
 }: {
   status: ContentStatus;
   pieces: Piece[];
   onPieceClick: (p: Piece) => void;
   onHoverStart: (piece: Piece, rect: DOMRect) => void;
   onHoverEnd: () => void;
+  cardFields: CardField[];
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `status:${status}` });
+  // El status ya está implícito en la columna — no hace falta repetirlo
+  // en la tarjeta aunque esté tildado en el menú de "Tarjetas".
+  const fieldsForKanban = cardFields.filter((f) => f !== "status");
 
   return (
     <div
@@ -37,7 +43,14 @@ function KanbanColumn({
       </div>
       <div className="flex flex-col gap-2">
         {pieces.map((p) => (
-          <PieceCard key={p.id} piece={p} onClick={() => onPieceClick(p)} onHoverStart={onHoverStart} onHoverEnd={onHoverEnd} />
+          <PieceCard
+            key={p.id}
+            piece={p}
+            onClick={() => onPieceClick(p)}
+            onHoverStart={onHoverStart}
+            onHoverEnd={onHoverEnd}
+            visibleFields={fieldsForKanban}
+          />
         ))}
       </div>
     </div>
@@ -49,11 +62,13 @@ export function KanbanView({
   onPieceClick,
   onHoverStart,
   onHoverEnd,
+  cardFields,
 }: {
   pieces: Piece[];
   onPieceClick: (p: Piece) => void;
   onHoverStart: (piece: Piece, rect: DOMRect) => void;
   onHoverEnd: () => void;
+  cardFields: CardField[];
 }) {
   return (
     <div className="flex gap-3 overflow-x-auto pb-2">
@@ -65,6 +80,7 @@ export function KanbanView({
           onPieceClick={onPieceClick}
           onHoverStart={onHoverStart}
           onHoverEnd={onHoverEnd}
+          cardFields={cardFields}
         />
       ))}
     </div>

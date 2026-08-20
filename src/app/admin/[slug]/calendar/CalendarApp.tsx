@@ -9,6 +9,7 @@ import { ListView } from "./ListView";
 import { PieceModal } from "./PieceModal";
 import { PiecePreview } from "./PiecePreview";
 import { FilterBar } from "./FilterBar";
+import { CardFieldsMenu, useCardFields } from "./CardFieldsMenu";
 import { TopicManager } from "./TopicManager";
 import { reschedulePiece, changePieceStatus } from "./actions";
 import type { ContentStatus } from "@/generated/prisma/enums";
@@ -30,6 +31,7 @@ export function CalendarApp({
   const router = useRouter();
   const [view, setView] = useState<View>("calendar");
   const [pieces, setPieces] = useState(initialPieces);
+  const { fields: cardFields, toggle: toggleCardField } = useCardFields(slug);
 
   // router.refresh() vuelve a ejecutar el server component padre y nos pasa
   // un initialPieces nuevo — sincronizamos el estado optimista local con eso
@@ -159,15 +161,18 @@ export function CalendarApp({
 
       <TopicManager clientId={clientId} slug={slug} topics={initialTopics} />
 
-      <FilterBar
-        topics={initialTopics}
-        platformFilter={platformFilter}
-        statusFilter={statusFilter}
-        topicFilter={topicFilter}
-        onPlatformChange={setPlatformFilter}
-        onStatusChange={setStatusFilter}
-        onTopicChange={setTopicFilter}
-      />
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <FilterBar
+          topics={initialTopics}
+          platformFilter={platformFilter}
+          statusFilter={statusFilter}
+          topicFilter={topicFilter}
+          onPlatformChange={setPlatformFilter}
+          onStatusChange={setStatusFilter}
+          onTopicChange={setTopicFilter}
+        />
+        {view !== "list" && <CardFieldsMenu fields={cardFields} onToggle={toggleCardField} />}
+      </div>
 
       <DndContext onDragEnd={handleDragEnd}>
         {view === "calendar" && (
@@ -177,10 +182,17 @@ export function CalendarApp({
             onEmptyClick={(dateKey) => setModal({ mode: "create", defaultDate: dateKey })}
             onHoverStart={showPreview}
             onHoverEnd={scheduleHidePreview}
+            cardFields={cardFields}
           />
         )}
         {view === "kanban" && (
-          <KanbanView pieces={filteredPieces} onPieceClick={jumpToList} onHoverStart={showPreview} onHoverEnd={scheduleHidePreview} />
+          <KanbanView
+            pieces={filteredPieces}
+            onPieceClick={jumpToList}
+            onHoverStart={showPreview}
+            onHoverEnd={scheduleHidePreview}
+            cardFields={cardFields}
+          />
         )}
       </DndContext>
 

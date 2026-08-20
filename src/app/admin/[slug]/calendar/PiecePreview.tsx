@@ -1,6 +1,6 @@
 "use client";
 
-import { PLATFORM_LABELS, STATUS_CLASS, STATUS_LABELS } from "@/lib/content";
+import { PLATFORM_LABELS, STATUS_CLASS, STATUS_LABELS, FORMAT_LABELS } from "@/lib/content";
 import type { Piece } from "./types";
 
 // Popover que aparece al hacer hover sobre una pieza (Calendario/Kanban) sin
@@ -48,7 +48,8 @@ export function PiecePreview({
         <p className="text-[13.5px] font-bold">{piece.title}</p>
       </div>
       <p className="mb-2" style={{ color: "var(--text-faint)" }}>
-        {PLATFORM_LABELS[piece.platform]} · {new Date(piece.scheduledDate).toLocaleDateString("es-AR")}
+        {PLATFORM_LABELS[piece.platform]}
+        {piece.format && ` · ${FORMAT_LABELS[piece.format]}`} · {new Date(piece.scheduledDate).toLocaleDateString("es-AR")}
         {piece.topic && ` · ${piece.topic.name}`}
       </p>
       <span className={`status-pill mb-2.5 ${STATUS_CLASS[piece.status]}`}>
@@ -61,6 +62,18 @@ export function PiecePreview({
         </p>
       )}
       {piece.hashtags && <p className="mt-1.5" style={{ color: "var(--sky)" }}>{piece.hashtags}</p>}
+      {piece.internalNotes && (
+        <p
+          className="mt-2 flex items-start gap-1.5 rounded-[9px] px-2 py-1.5"
+          style={{ background: "oklch(0.78 0.17 65 / 0.12)", color: "var(--amber)" }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 h-3 w-3 shrink-0">
+            <rect x="3" y="11" width="18" height="10" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          {piece.internalNotes}
+        </p>
+      )}
 
       <div className="mt-3 flex items-center justify-between border-t pt-2.5" style={{ borderColor: "var(--border)" }}>
         <span className="flex items-center gap-1" style={{ color: "var(--text-faint)" }}>

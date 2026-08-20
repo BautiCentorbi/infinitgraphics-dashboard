@@ -3,19 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import type { Platform, ContentStatus } from "@/generated/prisma/enums";
+import type { Platform, ContentStatus, ContentFormat } from "@/generated/prisma/enums";
 
 export type PieceFormState = { error: string | null };
 
 function readPieceFields(formData: FormData) {
   const title = (formData.get("title") as string | null)?.trim();
   const platform = formData.get("platform") as Platform;
+  const format = (formData.get("format") as ContentFormat | "") || null;
   const scheduledDateRaw = formData.get("scheduledDate") as string;
   const copy = (formData.get("copy") as string | null) ?? "";
   const hashtags = (formData.get("hashtags") as string | null)?.trim() || null;
   const mediaUrl = (formData.get("mediaUrl") as string | null)?.trim() || null;
+  const internalNotes = (formData.get("internalNotes") as string | null)?.trim() || null;
   const topicId = (formData.get("topicId") as string | null) || null;
-  return { title, platform, scheduledDateRaw, copy, hashtags, mediaUrl, topicId };
+  return { title, platform, format, scheduledDateRaw, copy, hashtags, mediaUrl, internalNotes, topicId };
 }
 
 export async function createContentPiece(
@@ -27,7 +29,7 @@ export async function createContentPiece(
 
   const clientId = formData.get("clientId") as string;
   const slug = formData.get("slug") as string;
-  const { title, platform, scheduledDateRaw, copy, hashtags, mediaUrl, topicId } =
+  const { title, platform, format, scheduledDateRaw, copy, hashtags, mediaUrl, internalNotes, topicId } =
     readPieceFields(formData);
 
   if (!title) return { error: "El título es obligatorio." };
@@ -38,10 +40,12 @@ export async function createContentPiece(
       clientId,
       title,
       platform,
+      format,
       scheduledDate: new Date(scheduledDateRaw),
       copy,
       hashtags,
       mediaUrl,
+      internalNotes,
       topicId,
       createdById: session.user.id,
     },
@@ -57,7 +61,7 @@ export async function updateContentPiece(
 ): Promise<PieceFormState> {
   const id = formData.get("id") as string;
   const slug = formData.get("slug") as string;
-  const { title, platform, scheduledDateRaw, copy, hashtags, mediaUrl, topicId } =
+  const { title, platform, format, scheduledDateRaw, copy, hashtags, mediaUrl, internalNotes, topicId } =
     readPieceFields(formData);
 
   if (!title) return { error: "El título es obligatorio." };
@@ -68,10 +72,12 @@ export async function updateContentPiece(
     data: {
       title,
       platform,
+      format,
       scheduledDate: new Date(scheduledDateRaw),
       copy,
       hashtags,
       mediaUrl,
+      internalNotes,
       topicId,
     },
   });
