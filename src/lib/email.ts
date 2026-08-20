@@ -120,24 +120,39 @@ export async function notifyAdminsOfClientActivity({
     "Ver en el calendario"
   );
 
-  await sendEmail(
-    admins.map((a) => a.email),
-    `${clientName} ${actionLabel} "${pieceTitle}"`,
-    html
-  );
+  const subject = `${clientName} ${actionLabel} "${pieceTitle}"`;
+  // Un envío por admin, no un solo mail con todos en "to" — así cada uno ve
+  // su propia copia (sin exponer el email de los demás) y no aparece en la
+  // bandeja como un mail "para X y N más" con el desplegable de Gmail.
+  await Promise.all(admins.map((a) => sendEmail(a.email, subject, html)));
   // pieceId no se usa en el link todavía (el calendario no tiene deep-link
   // a una pieza puntual) — queda como parámetro por si se agrega después.
   void pieceId;
 }
 
-// Avisa a un administrador nuevo que ya tiene acceso — sin la contraseña
-// (eso se lo pasa quien lo invitó, por fuera del mail, mismo criterio que
-// las demás credenciales de este proyecto).
-export async function notifyNewAdmin({ email, invitedByEmail }: { email: string; invitedByEmail: string }) {
+// Avisa a un administrador nuevo que ya tiene acceso. Incluye la
+// contraseña en el cuerpo del mail — a pedido explícito de Bautista
+// (2026-08-21), como solución momentánea mientras no haya un flow de
+// "elegí tu contraseña"/reseteo. Si más adelante se agrega ese flow, volver
+// a sacarla de acá y mandar solo un link de activación.
+export async function notifyNewAdmin({
+  email,
+  password,
+  invitedByEmail,
+}: {
+  email: string;
+  password: string;
+  invitedByEmail: string;
+}) {
   const html = wrapEmail(
     "Te agregaron como administrador en cm-suite",
     `<p style="margin: 0 0 12px;">${invitedByEmail} te agregó como administrador — vas a poder ver y gestionar todos los clientes.</p>
-     <p style="margin: 0;">Entrá con este email (<strong style="color:#171717;">${email}</strong>) y la contraseña que te haya pasado quien te invitó.</p>`,
+     <p style="margin: 0 0 12px;">Entrá con estos datos:</p>
+     <div style="background:#fafafa; border: 1px solid #f4f4f5; border-radius:10px; padding:12px 14px; margin: 0 0 12px;">
+       <p style="margin: 0 0 4px; color: #171717;"><strong>Email:</strong> ${email}</p>
+       <p style="margin: 0; color: #171717;"><strong>Contraseña:</strong> ${password}</p>
+     </div>
+     <p style="margin: 0; font-size: 12px; color: #9f9fa9;">Guardá este mail en un lugar seguro o borralo una vez que hayas entrado.</p>`,
     `${APP_URL}/login`,
     "Entrar a cm-suite"
   );

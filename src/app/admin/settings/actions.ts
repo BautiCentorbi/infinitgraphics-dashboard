@@ -32,7 +32,7 @@ export async function createAdmin(
 
   const session = await auth();
   if (session?.user?.email) {
-    notifyNewAdmin({ email, invitedByEmail: session.user.email }).catch(() => {});
+    notifyNewAdmin({ email, password, invitedByEmail: session.user.email }).catch(() => {});
   }
 
   revalidatePath("/admin/settings");
