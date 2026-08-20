@@ -119,8 +119,19 @@ producción**:
   desarrollo separada todavía). Recién cuando funciona ahí se commitea/pushea.
 - Login probado de punta a punta (local y producción): auth contra Neon
   funciona, `/admin` protegido carga bien.
-- Próximo paso de producto (paso 2 del orden de implementación): CRUD de
-  clientes desde `/admin`.
+
+Paso 2 (CRUD de clientes) también **completo y deployado**:
+
+- Crear cliente (slug autogenerado, sufijo numérico si el nombre se repite),
+  renombrar (el slug nunca cambia al renombrar — evita romper el login de
+  clientes ya creados) y borrar (cascada sobre notas/tareas/contenido).
+- `/admin/[slug]` como placeholder de detalle — se completa en el paso 3
+  (workspace: notas y tareas).
+- Probado en local por el propio Bautista desde el navegador (crear/
+  renombrar/borrar) y deployado a producción.
+
+Próximo paso de producto (paso 3 del orden de implementación): workspace
+mínimo por cliente (`Note` y `Task`, CRUD simple) en `/admin/[slug]`.
 
 ### Pendiente operativo (no bloquea seguir developeando)
 
