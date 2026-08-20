@@ -140,3 +140,23 @@ export async function deleteTopic(formData: FormData) {
   await prisma.topic.delete({ where: { id } });
   revalidatePath(`/admin/${slug}/calendar`);
 }
+
+export async function addAdminComment(
+  _prevState: PieceFormState,
+  formData: FormData
+): Promise<PieceFormState> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Sesión inválida." };
+
+  const pieceId = formData.get("pieceId") as string;
+  const slug = formData.get("slug") as string;
+  const body = (formData.get("body") as string | null)?.trim();
+  if (!body) return { error: "Escribí algo antes de comentar." };
+
+  await prisma.comment.create({
+    data: { contentPieceId: pieceId, authorId: session.user.id, body },
+  });
+
+  revalidatePath(`/admin/${slug}/calendar`);
+  return { error: null };
+}

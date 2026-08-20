@@ -18,7 +18,13 @@ export default async function ClientCalendarPage({
   const [pieces, topics] = await Promise.all([
     prisma.contentPiece.findMany({
       where: { clientId: client.id },
-      include: { topic: { select: { id: true, name: true } } },
+      include: {
+        topic: { select: { id: true, name: true } },
+        comments: {
+          orderBy: { createdAt: "asc" },
+          include: { author: { select: { email: true, role: true } } },
+        },
+      },
       orderBy: { scheduledDate: "asc" },
     }),
     prisma.topic.findMany({ where: { clientId: client.id }, orderBy: { name: "asc" } }),
@@ -35,6 +41,13 @@ export default async function ClientCalendarPage({
     status: p.status,
     topicId: p.topicId,
     topic: p.topic,
+    comments: p.comments.map((c) => ({
+      id: c.id,
+      body: c.body,
+      createdAt: c.createdAt.toISOString(),
+      authorEmail: c.author.email,
+      authorRole: c.author.role,
+    })),
   }));
 
   return (

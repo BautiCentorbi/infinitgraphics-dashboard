@@ -8,9 +8,7 @@ export type PieceComment = {
   authorRole: "admin" | "client";
 };
 
-// Piezas de contenido serializadas para pasar de server component a client
-// component (Date -> string ISO).
-export type Piece = {
+export type ClientPiece = {
   id: string;
   title: string;
   platform: Platform;
@@ -19,9 +17,6 @@ export type Piece = {
   hashtags: string | null;
   mediaUrl: string | null;
   status: ContentStatus;
-  topicId: string | null;
-  topic: { id: string; name: string } | null;
+  topicName: string | null;
   comments: PieceComment[];
 };
-
-export type TopicOption = { id: string; name: string };

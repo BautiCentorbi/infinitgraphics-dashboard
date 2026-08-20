@@ -5,6 +5,7 @@ import { NewNoteForm } from "./NewNoteForm";
 import { NoteItem } from "./NoteItem";
 import { NewTaskForm } from "./NewTaskForm";
 import { TaskItem } from "./TaskItem";
+import { ClientAccess } from "./ClientAccess";
 
 export const dynamic = "force-dynamic";
 
@@ -17,9 +18,10 @@ export default async function ClientWorkspacePage({
   const client = await prisma.client.findUnique({ where: { slug } });
   if (!client) notFound();
 
-  const [notes, tasks] = await Promise.all([
+  const [notes, tasks, clientUsers] = await Promise.all([
     prisma.note.findMany({ where: { clientId: client.id }, orderBy: { updatedAt: "desc" } }),
     prisma.task.findMany({ where: { clientId: client.id }, orderBy: [{ done: "asc" }, { dueDate: "asc" }] }),
+    prisma.user.findMany({ where: { clientId: client.id, role: "client" }, select: { id: true, email: true } }),
   ]);
 
   return (
@@ -36,6 +38,8 @@ export default async function ClientWorkspacePage({
           Calendario de contenido →
         </Link>
       </div>
+
+      <ClientAccess clientId={client.id} slug={client.slug} users={clientUsers} />
 
       <section className="mb-8">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">

@@ -1,9 +1,50 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 export type NoteFormState = { error: string | null };
+
+export type ClientUserFormState = { error: string | null };
+
+// Crea el login de un cliente (role=client, atado a este Client). Puede
+// haber más de uno por cliente (ej. dos personas del lado del cliente que
+// necesiten entrar). Ver ARCHITECTURE.md, "Roles y acceso".
+export async function createClientUser(
+  _prevState: ClientUserFormState,
+  formData: FormData
+): Promise<ClientUserFormState> {
+  const clientId = formData.get("clientId") as string;
+  const slug = formData.get("slug") as string;
+  const email = (formData.get("email") as string | null)?.trim().toLowerCase();
+  const password = formData.get("password") as string | null;
+
+  if (!email) return { error: "El email es obligatorio." };
+  if (!password || password.length < 8) {
+    return { error: "La contraseña debe tener al menos 8 caracteres." };
+  }
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) return { error: "Ya existe un usuario con ese email." };
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  await prisma.user.create({
+    data: { email, passwordHash, role: "client", clientId },
+  });
+
+  revalidatePath(`/admin/${slug}`);
+  return { error: null };
+}
+
+export async function deleteClientUser(formData: FormData) {
+  const id = formData.get("id") as string;
+  const slug = formData.get("slug") as string;
+  if (!id) return;
+
+  await prisma.user.delete({ where: { id } });
+  revalidatePath(`/admin/${slug}`);
+}
 
 export async function createNote(
   _prevState: NoteFormState,
