@@ -130,8 +130,17 @@ Paso 2 (CRUD de clientes) también **completo y deployado**:
 - Probado en local por el propio Bautista desde el navegador (crear/
   renombrar/borrar) y deployado a producción.
 
-Próximo paso de producto (paso 3 del orden de implementación): workspace
-mínimo por cliente (`Note` y `Task`, CRUD simple) en `/admin/[slug]`.
+Paso 3 (workspace mínimo por cliente) también **completo y deployado**:
+
+- `Note`: crear, editar, borrar.
+- `Task`: crear (con fecha opcional), marcar hecha/no hecha, borrar.
+- Todo en `/admin/[slug]`, scoped por cliente. Probado en local (lógica +
+  verificación manual de Bautista en navegador) antes de pushear.
+
+Próximo paso de producto (paso 4 del orden de implementación): CRUD del
+calendario editorial (`ContentPiece`) y su vista de calendario, todavía
+desde `/admin` (la vista de cliente en `/c/[slug]` con login y comentarios
+es el paso 5, después de este).
 
 ### Pendiente operativo (no bloquea seguir developeando)
 
