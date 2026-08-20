@@ -272,6 +272,20 @@ código.
   espacio, y evitar grids `sm:grid-cols-N` dentro de columnas que ya son
   la mitad del ancho).
 
+### Nota: warning de SSL de `pg` (resuelto 2026-08-21)
+
+El warning "SECURITY WARNING: The SSL modes 'prefer', 'require'..." que
+aparecía en consola no era una vulnerabilidad — era un aviso de la librería
+`pg` de que en su próxima versión mayor `sslmode=require` va a dejar de
+comportarse como `verify-full` (validación de certificado) y va a pasar a
+la semántica libpq estándar (más débil, no valida certificado). Se resolvió
+seteando explícitamente `sslmode=verify-full` en `DATABASE_URL` — en
+`.env`, `.env.local` (ambos gitignored, no viajan con el repo) y en las 3
+environments de Vercel (Production/Preview/Development, vía `vercel env
+rm`/`add`). Si se clona el repo en otra PC o se recrea `.env`/`.env.local`
+desde cero, usar `sslmode=verify-full` (no `sslmode=require`) en el
+connection string de Neon.
+
 ### Pendiente operativo (no bloquea seguir developeando)
 
 - Conectar GitHub↔Vercel para auto-deploy (Bautista lo hace desde la web).
