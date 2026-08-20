@@ -237,6 +237,41 @@ código.
   hover (mismo patrón que ya tenía `ClientRow` en el dashboard de
   clientes) — consistencia general de microinteracciones en toda la app.
 
+### Dashboard del cliente: documentación + resumen (2026-08-21)
+
+`/admin/[slug]` dejó de ser solo notas/tareas — ahora es un dashboard real:
+
+- **`Document`** (modelo Prisma nuevo): manuales/guías reales, subidos por
+  el admin. El archivo vive en **Vercel Blob**, store `cm-suite-docs`,
+  **acceso público** (la URL no es indexable/adivinable, pero no requiere
+  token para servirla — si en algún momento hace falta que sean privados,
+  hay que migrar a `access: "private"` y resolver cómo generar URLs
+  firmadas para verlos/descargarlos).
+- **Upload directo navegador→Blob** (`@vercel/blob/client`, no server
+  action con el archivo) — necesario porque un PDF puede superar el límite
+  de tamaño de una server action normal (~4.5MB). El flujo:
+  `src/app/api/documents/upload/route.ts` (autoriza el token, solo
+  `role: "admin"`) → el navegador sube directo a Blob → el cliente llama
+  `createDocumentRecord` (server action normal) para guardar los metadatos
+  en la base. El callback `onUploadCompleted` de Vercel (webhook) **no
+  llega en localhost** — por eso el registro en la base se crea desde el
+  cliente, no desde ese webhook; si se necesitara procesar el archivo del
+  lado servidor en el futuro, tenerlo en cuenta.
+- **`StatTiles`**: piezas totales / pendientes de revisión / tareas
+  pendientes / documentos — resumen arriba de la página.
+- **`CalendarPreview`**: próximas 5 piezas programadas, con link al
+  calendario completo.
+- Layout: dos columnas (calendario+tareas | documentación+notas),
+  contenedor `max-w-6xl`.
+- **Gotcha real que costó una vuelta**: varias filas de formularios usaban
+  clases `sm:` de Tailwind (reaccionan al ancho de la *ventana*, no del
+  contenedor) — al pasar de una sola columna ancha a dos columnas
+  angostas, esas filas desbordaban aunque la ventana fuera ancha. Si se
+  agregan más widgets a columnas angostas, revisar que no se reintroduzca
+  este problema (usar `min-w-0`/`flex-wrap` en vez de asumir que hay
+  espacio, y evitar grids `sm:grid-cols-N` dentro de columnas que ya son
+  la mitad del ancho).
+
 ### Pendiente operativo (no bloquea seguir developeando)
 
 - Conectar GitHub↔Vercel para auto-deploy (Bautista lo hace desde la web).
