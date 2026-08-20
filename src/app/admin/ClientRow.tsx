@@ -3,28 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import { renameClient, deleteClient } from "./actions";
-
-// Ciclo de gradientes de marca para los avatares — variedad visual sin
-// depender de datos reales de plataformas conectadas (eso es el pilar de
-// analytics, todavía no construido).
-const AVATAR_GRADIENTS = [
-  "linear-gradient(135deg, var(--sky), var(--blue))",
-  "linear-gradient(135deg, var(--amber), var(--blue))",
-  "linear-gradient(135deg, var(--teal), var(--sky))",
-  "linear-gradient(135deg, var(--blue), var(--amber))",
-  "linear-gradient(135deg, var(--sky), var(--amber))",
-];
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
-}
+import { AVATAR_GRADIENTS, initials } from "@/lib/avatar";
 
 export function ClientRow({
   client,
   index,
 }: {
-  client: { id: string; name: string; slug: string };
+  client: { id: string; name: string; slug: string; avatarUrl: string | null };
   index: number;
 }) {
   const [editing, setEditing] = useState(false);
@@ -66,10 +51,15 @@ export function ClientRow({
     >
       <div className="mb-4 flex items-center justify-between">
         <div
-          className="flex h-11.5 w-11.5 items-center justify-center rounded-[13px] font-display text-base font-bold text-white"
-          style={{ background: AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length] }}
+          className="flex h-11.5 w-11.5 items-center justify-center overflow-hidden rounded-[13px] font-display text-base font-bold text-white"
+          style={{ background: client.avatarUrl ? undefined : AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length] }}
         >
-          {initials(client.name)}
+          {client.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={client.avatarUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            initials(client.name)
+          )}
         </div>
         <div className="flex items-center gap-3 text-xs opacity-0 transition-opacity group-hover:opacity-100">
           <button onClick={() => setEditing(true)} style={{ color: "var(--text-dim)" }}>

@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { del } from "@vercel/blob";
 import { signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { slugify } from "@/lib/slug";
+import { slugify, RESERVED_SLUGS } from "@/lib/slug";
 
 export async function signOutAction() {
   await signOut({ redirectTo: "/login" });
@@ -26,7 +27,7 @@ export async function createClient(
 
   let slug = baseSlug;
   let suffix = 1;
-  while (await prisma.client.findUnique({ where: { slug } })) {
+  while (RESERVED_SLUGS.includes(slug) || (await prisma.client.findUnique({ where: { slug } }))) {
     suffix += 1;
     slug = `${baseSlug}-${suffix}`;
   }
@@ -45,6 +46,23 @@ export async function renameClient(formData: FormData) {
   if (!id || !name) return;
 
   await prisma.client.update({ where: { id }, data: { name } });
+  revalidatePath("/admin");
+}
+
+// La foto ya está en Blob cuando esto se llama (subida directo desde el
+// navegador, ver api/avatar/upload) — esto guarda la URL y borra la vieja
+// si había una (evita ir acumulando fotos huérfanas en el store).
+export async function updateClientAvatar(clientId: string, avatarUrl: string) {
+  const client = await prisma.client.findUnique({ where: { id: clientId }, select: { avatarUrl: true } });
+  await prisma.client.update({ where: { id: clientId }, data: { avatarUrl } });
+  if (client?.avatarUrl) await del(client.avatarUrl).catch(() => {});
+  revalidatePath("/admin");
+}
+
+export async function removeClientAvatar(clientId: string) {
+  const client = await prisma.client.findUnique({ where: { id: clientId }, select: { avatarUrl: true } });
+  await prisma.client.update({ where: { id: clientId }, data: { avatarUrl: null } });
+  if (client?.avatarUrl) await del(client.avatarUrl).catch(() => {});
   revalidatePath("/admin");
 }
 

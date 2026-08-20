@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CalendarApp } from "./CalendarApp";
-import { AdminNav } from "@/components/AdminNav";
 import type { Piece } from "./types";
 
 export const dynamic = "force-dynamic";
@@ -54,24 +53,20 @@ export default async function ClientCalendarPage({
   }));
 
   return (
-    <div className="bg-app min-h-screen">
-      <AdminNav active="calendario" calendarSlug={client.slug} />
+    <div className="mx-auto max-w-6xl px-10 py-9">
+      <Link href={`/admin/${slug}`} className="text-sm hover:underline" style={{ color: "var(--text-dim)" }}>
+        ← {client.name}
+      </Link>
+      <h1 className="mt-2 mb-6 text-[26px] font-bold tracking-tight font-display">
+        Calendario de contenido — {client.name}
+      </h1>
 
-      <div className="mx-auto max-w-6xl px-10 py-9">
-        <Link href={`/admin/${slug}`} className="text-sm hover:underline" style={{ color: "var(--text-dim)" }}>
-          ← {client.name}
-        </Link>
-        <h1 className="mt-2 mb-6 text-[26px] font-bold tracking-tight font-display">
-          Calendario de contenido — {client.name}
-        </h1>
-
-        <CalendarApp
-          clientId={client.id}
-          slug={client.slug}
-          initialPieces={serializedPieces}
-          initialTopics={topics}
-        />
-      </div>
+      <CalendarApp
+        clientId={client.id}
+        slug={client.slug}
+        initialPieces={serializedPieces}
+        initialTopics={topics}
+      />
     </div>
   );
 }
