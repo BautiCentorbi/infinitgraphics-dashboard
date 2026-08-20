@@ -18,16 +18,21 @@ export function NewTaskForm({ clientId, slug }: { clientId: string; slug: string
     <form ref={formRef} action={formAction} className="mb-4 flex flex-col gap-2">
       <input type="hidden" name="clientId" value={clientId} />
       <input type="hidden" name="slug" value={slug} />
-      <div className="flex gap-2">
+      <input
+        name="title"
+        placeholder="Nueva tarea"
+        required
+        className={`w-full ${inputCls}`}
+        style={{ borderColor: "var(--border)" }}
+      />
+      <div className="flex flex-wrap gap-2">
         <input
-          name="title"
-          placeholder="Nueva tarea"
-          required
-          className={`flex-1 ${inputCls}`}
-          style={{ borderColor: "var(--border)" }}
+          name="dueDate"
+          type="date"
+          className={`min-w-0 flex-1 ${inputCls}`}
+          style={{ borderColor: "var(--border)", colorScheme: "dark" }}
         />
-        <input name="dueDate" type="date" className={inputCls} style={{ borderColor: "var(--border)", colorScheme: "dark" }} />
-        <button type="submit" disabled={pending} className="btn-grad">
+        <button type="submit" disabled={pending} className="btn-grad shrink-0">
           {pending ? "..." : "Agregar"}
         </button>
       </div>

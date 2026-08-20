@@ -4,7 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { createClientUser, deleteClientUser, type ClientUserFormState } from "./actions";
 
 const initialState: ClientUserFormState = { error: null };
-const inputCls = "flex-1 rounded-[11px] border bg-black/20 px-3 py-2 text-sm outline-none focus:border-[var(--sky)]";
+const inputCls = "min-w-0 flex-1 rounded-[11px] border bg-black/20 px-3 py-2 text-sm outline-none focus:border-[var(--sky)]";
 
 export function ClientAccess({
   clientId,

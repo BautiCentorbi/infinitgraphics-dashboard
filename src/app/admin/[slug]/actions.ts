@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { del } from "@vercel/blob";
 import bcrypt from "bcryptjs";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 export type NoteFormState = { error: string | null };
@@ -122,5 +124,61 @@ export async function deleteTask(formData: FormData) {
   if (!id) return;
 
   await prisma.task.delete({ where: { id } });
+  revalidatePath(`/admin/${slug}`);
+}
+
+// El archivo ya está en Blob cuando esto se llama (subido directo desde el
+// navegador, ver src/app/api/documents/upload/route.ts) — esto solo crea el
+// registro en la base con los metadatos.
+export async function createDocumentRecord({
+  clientId,
+  slug,
+  title,
+  description,
+  fileUrl,
+  fileName,
+  fileSize,
+  mimeType,
+}: {
+  clientId: string;
+  slug: string;
+  title: string;
+  description: string;
+  fileUrl: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string | null;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const doc = await prisma.document.create({
+    data: {
+      clientId,
+      title,
+      description: description || null,
+      fileUrl,
+      fileName,
+      fileSize,
+      mimeType,
+      uploadedById: session.user.id,
+    },
+  });
+  revalidatePath(`/admin/${slug}`);
+  return doc.id;
+}
+
+export async function deleteDocument(formData: FormData) {
+  const id = formData.get("id") as string;
+  const slug = formData.get("slug") as string;
+  if (!id) return;
+
+  const doc = await prisma.document.findUnique({ where: { id } });
+  if (!doc) return;
+
+  await prisma.document.delete({ where: { id } });
+  // Borrar el registro aunque falle el borrado en Blob (no dejar un doc
+  // fantasma en la UI por un error transitorio de la API de Blob).
+  await del(doc.fileUrl).catch(() => {});
   revalidatePath(`/admin/${slug}`);
 }

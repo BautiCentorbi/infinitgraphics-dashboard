@@ -54,10 +54,10 @@ export function NoteItem({
   return (
     <li className="surface surface-hover card-anim group rounded-[14px] p-3.5 transition-colors">
       <div className="flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="font-semibold">{note.title}</p>
           {note.body && (
-            <p className="mt-1 text-sm whitespace-pre-wrap" style={{ color: "var(--text-dim)" }}>
+            <p className="mt-1 text-sm break-words whitespace-pre-wrap" style={{ color: "var(--text-dim)" }}>
               {note.body}
             </p>
           )}

@@ -46,6 +46,7 @@ model User {
   comments        Comment[]
   contentPieces   ContentPiece[]  @relation("ContentPieceCreatedBy")
   approvalEvents  ApprovalEvent[]
+  documents       Document[]
 
   createdAt DateTime @default(now())
 }
@@ -60,6 +61,7 @@ model Client {
   tasks          Task[]
   contentPieces  ContentPiece[]
   topics         Topic[]
+  documents      Document[]
 
   createdAt DateTime @default(now())
 }
@@ -91,6 +93,28 @@ model Note {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Documentación del cliente: manuales, guías de marca, etc. — el archivo en
+// sí vive en Vercel Blob (store "cm-suite-docs", acceso público: la URL no
+// es indexable/adivinable, pero no requiere token para servirla — ver
+// ARCHITECTURE.md si hace falta pasar a Blob privado más adelante).
+model Document {
+  id       String @id @default(cuid())
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  title       String
+  description String?
+  fileUrl     String
+  fileName    String
+  fileSize    Int
+  mimeType    String?
+
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id])
+  uploadedById String
+
+  createdAt DateTime @default(now())
 }
 
 model Task {
