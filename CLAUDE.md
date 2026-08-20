@@ -359,6 +359,47 @@ color + menú propio (`PriorityPicker.tsx`, mismo patrón que `StatusPicker`)
 en `TaskItem`; se elige también al crear en `NewTaskForm`. Tareas ordenadas
 pendientes primero, después por prioridad (alta→baja), después por fecha.
 
+### Pilar de Métricas — arrancado con Instagram (2026-08-21)
+
+Primer paso real del pilar de analytics (antes solo el placeholder
+"Próximamente" en `/admin/metrics`). Ojo: esto vive en `/admin/[slug]`
+(métricas *por cliente*), no en `/admin/metrics` (esa sigue siendo la vista
+general multi-cliente, todavía sin construir).
+
+- **Modelo:** `DataConnection` (cliente ↔ cuenta externa). `@@unique([clientId,
+  platform])` — un cliente tiene una sola cuenta conectada por plataforma.
+  `provider` default `"windsor"`.
+- **Decisión de arquitectura (confirmada con Bautista):** la API key de
+  Windsor.ai es **una sola, compartida por todo el deployment** (env var
+  `WINDSOR_API_KEY`), no por cliente ni por organización — encaja con "uso
+  interno" (ver arriba). **Si esto se vende a otras agencias en el futuro**,
+  ahí hace falta un modelo de organizaciones (cada una con su propia key,
+  guardada en la base, no como env var global) y los clientes colgando de
+  una organización — es una re-arquitectura real, no antes de que haga
+  falta de verdad.
+- **`src/lib/windsor.ts`**: cliente REST server-only (`import "server-only"`)
+  contra `https://connectors.windsor.ai`. **Gotcha real, verificado a mano
+  con curl** (no asumido del MCP): el parámetro `accounts`/`filters` de la
+  query **no filtra** las filas para el connector `instagram` — la API
+  devuelve todas las cuentas conectadas sin importar el filtro. Por eso
+  siempre se pide `account_id` en los `fields` y se filtra del lado de la
+  app (`Array.filter` en JS). Si se agregan más connectors (Facebook,
+  TikTok, LinkedIn), volver a verificar esto con curl antes de asumir que
+  el filtro funciona — puede variar por connector.
+- **Flujo de conexión:** la cuenta se conecta a Windsor.ai *fuera* de esta
+  app (dashboard de Windsor) — lo que hace `ConnectInstagram.tsx` es listar
+  las cuentas que Windsor ya ve y dejar elegir cuál corresponde a este
+  cliente. No hay OAuth propio acá.
+- **`InstagramSection.tsx`**: resumen básico (decisión tomada con
+  Bautista, no el detalle completo post-por-post) — seguidores, posts
+  totales, interacciones/likes/comentarios/views/saves de los últimos 30
+  días, y miniaturas de las últimas publicaciones.
+- Este es el patrón a repetir para Facebook/TikTok/LinkedIn cuando se
+  pidan (Bautista decidió arrancar solo por Instagram primero, ver charla
+  del 2026-08-21) — mismo `DataConnection.platform`, mismo patrón de
+  `lib/windsor.ts` por connector, verificando el comportamiento real de
+  esa API antes de escribir el parser.
+
 ### Nota: warning de SSL de `pg` (resuelto 2026-08-21)
 
 El warning "SECURITY WARNING: The SSL modes 'prefer', 'require'..." que
