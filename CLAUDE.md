@@ -352,6 +352,13 @@ clientes ahí, no en cada página).
   (`src/lib/avatar.ts`, compartido entre `ClientRow` y `Sidebar` para que el
   mismo cliente tenga el mismo color en los dos lados).
 
+### Prioridad en tareas (2026-08-21)
+
+`Task.priority` (enum `low`/`medium`/`high`, default `medium`). Chip de
+color + menú propio (`PriorityPicker.tsx`, mismo patrón que `StatusPicker`)
+en `TaskItem`; se elige también al crear en `NewTaskForm`. Tareas ordenadas
+pendientes primero, después por prioridad (alta→baja), después por fecha.
+
 ### Nota: warning de SSL de `pg` (resuelto 2026-08-21)
 
 El warning "SECURITY WARNING: The SSL modes 'prefer', 'require'..." que
