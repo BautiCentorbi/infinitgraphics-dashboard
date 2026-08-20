@@ -10,6 +10,7 @@ import { DocumentsSection } from "./DocumentsSection";
 import { StatTiles } from "./StatTiles";
 import { CalendarPreview } from "./CalendarPreview";
 import { ClientAvatarUpload } from "./ClientAvatarUpload";
+import { InstagramSection } from "./InstagramSection";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export default async function ClientWorkspacePage({
   const client = await prisma.client.findUnique({ where: { slug } });
   if (!client) notFound();
 
-  const [notes, tasks, clientUsers, documents, upcomingPieces, totalPieces, pendingReview] = await Promise.all([
+  const [notes, tasks, clientUsers, documents, upcomingPieces, totalPieces, pendingReview, instagramConnection] = await Promise.all([
     prisma.note.findMany({ where: { clientId: client.id }, orderBy: { updatedAt: "desc" } }),
     prisma.task.findMany({
       where: { clientId: client.id },
@@ -38,6 +39,10 @@ export default async function ClientWorkspacePage({
     }),
     prisma.contentPiece.count({ where: { clientId: client.id } }),
     prisma.contentPiece.count({ where: { clientId: client.id, status: "in_review" } }),
+    prisma.dataConnection.findUnique({
+      where: { clientId_platform: { clientId: client.id, platform: "instagram" } },
+      select: { id: true, externalAccountId: true, accountName: true },
+    }),
   ]);
 
   const pendingTasks = tasks.filter((t) => !t.done).length;
@@ -70,6 +75,8 @@ export default async function ClientWorkspacePage({
       />
 
       <ClientAccess clientId={client.id} slug={client.slug} users={clientUsers} />
+
+      <InstagramSection clientId={client.id} slug={client.slug} connection={instagramConnection} />
 
       <div className="grid grid-cols-1 gap-x-10 lg:grid-cols-2">
         <div>

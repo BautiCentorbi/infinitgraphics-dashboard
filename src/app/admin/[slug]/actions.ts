@@ -5,7 +5,8 @@ import { del } from "@vercel/blob";
 import bcrypt from "bcryptjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import type { TaskPriority } from "@/generated/prisma/enums";
+import { listInstagramAccounts } from "@/lib/windsor";
+import type { TaskPriority, Platform } from "@/generated/prisma/enums";
 
 export type NoteFormState = { error: string | null };
 
@@ -188,5 +189,42 @@ export async function deleteDocument(formData: FormData) {
   // Borrar el registro aunque falle el borrado en Blob (no dejar un doc
   // fantasma en la UI por un error transitorio de la API de Blob).
   await del(doc.fileUrl).catch(() => {});
+  revalidatePath(`/admin/${slug}`);
+}
+
+// Cuentas de Instagram ya conectadas en Windsor.ai (la conexión en sí se
+// hace en el dashboard de Windsor, fuera de esta app) — para el selector de
+// "a cuál de estas corresponde este cliente".
+export async function getAvailableInstagramAccounts() {
+  try {
+    return await listInstagramAccounts();
+  } catch {
+    return [];
+  }
+}
+
+export async function connectDataConnection({
+  clientId,
+  slug,
+  platform,
+  externalAccountId,
+  accountName,
+}: {
+  clientId: string;
+  slug: string;
+  platform: Platform;
+  externalAccountId: string;
+  accountName: string;
+}) {
+  await prisma.dataConnection.upsert({
+    where: { clientId_platform: { clientId, platform } },
+    update: { externalAccountId, accountName },
+    create: { clientId, platform, externalAccountId, accountName },
+  });
+  revalidatePath(`/admin/${slug}`);
+}
+
+export async function disconnectDataConnection(id: string, slug: string) {
+  await prisma.dataConnection.delete({ where: { id } });
   revalidatePath(`/admin/${slug}`);
 }

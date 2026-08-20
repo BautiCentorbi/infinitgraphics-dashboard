@@ -67,14 +67,35 @@ model Client {
   slug      String  @unique
   avatarUrl String?
 
-  users          User[]
-  notes          Note[]
-  tasks          Task[]
-  contentPieces  ContentPiece[]
-  topics         Topic[]
-  documents      Document[]
+  users            User[]
+  notes            Note[]
+  tasks            Task[]
+  contentPieces    ContentPiece[]
+  topics           Topic[]
+  documents        Document[]
+  dataConnections  DataConnection[]
 
   createdAt DateTime @default(now())
+}
+
+// Vínculo entre un cliente y una cuenta de red social conectada en
+// Windsor.ai (pilar de Métricas). Hoy: una API key de Windsor compartida
+// por todo el deployment (uso interno, ver CLAUDE.md) — si esto se vende a
+// otras agencias en el futuro, acá es donde habría que colgar la
+// organización dueña de la key, no antes.
+model DataConnection {
+  id       String @id @default(cuid())
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  platform          Platform
+  provider          String   @default("windsor")
+  externalAccountId String // account_id de Windsor.ai para este connector
+  accountName       String // username/nombre de cuenta, para mostrar
+
+  connectedAt DateTime @default(now())
+
+  @@unique([clientId, platform])
 }
 
 // Categorías de tema, definidas por cliente (ej. "Producto", "Institucional",
