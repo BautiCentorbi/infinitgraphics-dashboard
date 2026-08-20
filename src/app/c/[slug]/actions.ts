@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth, signOut } from "@/auth";
+import { notifyAdminsOfClientActivity } from "@/lib/email";
 
 export async function signOutAction() {
   await signOut({ redirectTo: "/login" });
@@ -15,7 +16,10 @@ export type CommentFormState = { error: string | null };
 // una server action se puede invocar directo, así que no confiamos solo en
 // eso (ver ARCHITECTURE.md, "Roles y acceso").
 async function assertOwnsPiece(pieceId: string, clientId: string) {
-  const piece = await prisma.contentPiece.findUnique({ where: { id: pieceId } });
+  const piece = await prisma.contentPiece.findUnique({
+    where: { id: pieceId },
+    include: { client: { select: { name: true, slug: true } } },
+  });
   if (!piece || piece.clientId !== clientId) throw new Error("No autorizado.");
   return piece;
 }
@@ -34,11 +38,20 @@ export async function addComment(
   const body = (formData.get("body") as string | null)?.trim();
   if (!body) return { error: "Escribí algo antes de comentar." };
 
-  await assertOwnsPiece(pieceId, session.user.clientId);
+  const piece = await assertOwnsPiece(pieceId, session.user.clientId);
 
   await prisma.comment.create({
     data: { contentPieceId: pieceId, authorId: session.user.id, body },
   });
+
+  notifyAdminsOfClientActivity({
+    clientName: piece.client.name,
+    clientSlug: piece.client.slug,
+    pieceTitle: piece.title,
+    pieceId,
+    action: "comment",
+    commentBody: body,
+  }).catch(() => {});
 
   revalidatePath(`/c/${slug}`);
   return { error: null };
@@ -58,7 +71,7 @@ async function clientSetStatus(pieceId: string, slug: string, status: "approved"
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "client" || !session.user.clientId) return;
 
-  await assertOwnsPiece(pieceId, session.user.clientId);
+  const piece = await assertOwnsPiece(pieceId, session.user.clientId);
 
   await prisma.$transaction([
     prisma.contentPiece.update({ where: { id: pieceId }, data: { status } }),
@@ -66,6 +79,14 @@ async function clientSetStatus(pieceId: string, slug: string, status: "approved"
       data: { contentPieceId: pieceId, status, changedById: session.user.id },
     }),
   ]);
+
+  notifyAdminsOfClientActivity({
+    clientName: piece.client.name,
+    clientSlug: piece.client.slug,
+    pieceTitle: piece.title,
+    pieceId,
+    action: status,
+  }).catch(() => {});
 
   revalidatePath(`/c/${slug}`);
 }

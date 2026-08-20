@@ -1,21 +1,28 @@
-import { ComingSoon } from "@/components/ComingSoon";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { AdminsSection } from "./AdminsSection";
 
-export default function SettingsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SettingsPage() {
+  const session = await auth();
+  const admins = await prisma.user.findMany({
+    where: { role: "admin" },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, email: true, createdAt: true },
+  });
+
   return (
-    <ComingSoon
-      icon={
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-        </svg>
-      }
-      title="Configuración"
-      description="Administración de la cuenta y del equipo — el primer paso va a ser poder invitar administradores además de vos: compañeros de trabajo u otras personas que necesiten controlar el trabajo y dar feedback."
-      bullets={[
-        "Invitar administradores adicionales (mismo acceso que vos: todos los clientes)",
-        "Ver quién hizo qué (ya existe la auditoría por pieza — esto la expondría acá)",
-        "Eventualmente: permisos más finos si hace falta (ej. acceso a un subconjunto de clientes)",
-      ]}
-    />
+    <div className="mx-auto max-w-2xl px-10 py-16">
+      <h1 className="mb-1.5 text-center text-2xl font-bold tracking-tight font-display">Configuración</h1>
+      <p className="mb-8 text-center text-sm" style={{ color: "var(--text-dim)" }}>
+        Administración de la cuenta y del equipo.
+      </p>
+
+      <AdminsSection
+        admins={admins.map((a) => ({ ...a, createdAt: a.createdAt.toISOString() }))}
+        currentUserId={session?.user?.id ?? ""}
+      />
+    </div>
   );
 }
