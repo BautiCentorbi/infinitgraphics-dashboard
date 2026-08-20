@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { CARD_FIELDS, CARD_FIELD_LABELS, type CardField } from "@/lib/content";
 
 // Qué propiedades se muestran en las tarjetas de Calendario/Kanban — es una
@@ -65,30 +66,36 @@ export function CardFieldsMenu({
         Tarjetas
       </button>
 
-      {open && (
-        <div
-          className="absolute top-[calc(100%+6px)] left-0 z-20 w-56 rounded-[14px] border p-2"
-          style={{ borderColor: "var(--border-strong)", background: "var(--surface-2)", boxShadow: "0 20px 50px -14px oklch(0 0 0 / 0.55)" }}
-        >
-          <p className="px-2 pt-1 pb-2 text-[10.5px] font-bold tracking-wide uppercase" style={{ color: "var(--text-faint)" }}>
-            Mostrar en las tarjetas
-          </p>
-          {CARD_FIELDS.map((f) => (
-            <label
-              key={f}
-              className="flex cursor-pointer items-center gap-2.5 rounded-[9px] px-2 py-1.5 text-sm transition-colors hover:bg-[var(--surface-3)]"
-            >
-              <input
-                type="checkbox"
-                checked={fields.includes(f)}
-                onChange={() => onToggle(f)}
-                className="h-3.5 w-3.5 accent-[var(--sky)]"
-              />
-              {CARD_FIELD_LABELS[f]}
-            </label>
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: -6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: -6 }}
+            transition={{ duration: 0.16, ease: [0.2, 0.8, 0.2, 1] }}
+            className="absolute top-[calc(100%+6px)] left-0 z-20 w-56 rounded-[14px] border p-2"
+            style={{ borderColor: "var(--border-strong)", background: "var(--surface-2)", boxShadow: "0 20px 50px -14px oklch(0 0 0 / 0.55)" }}
+          >
+            <p className="px-2 pt-1 pb-2 text-[10.5px] font-bold tracking-wide uppercase" style={{ color: "var(--text-faint)" }}>
+              Mostrar en las tarjetas
+            </p>
+            {CARD_FIELDS.map((f) => (
+              <label
+                key={f}
+                className="flex cursor-pointer items-center gap-2.5 rounded-[9px] px-2 py-1.5 text-sm transition-colors hover:bg-[var(--surface-3)]"
+              >
+                <input
+                  type="checkbox"
+                  checked={fields.includes(f)}
+                  onChange={() => onToggle(f)}
+                  className="h-3.5 w-3.5 accent-[var(--sky)]"
+                />
+                {CARD_FIELD_LABELS[f]}
+              </label>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

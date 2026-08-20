@@ -1,16 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PLATFORM_LABELS, STATUS_LABELS, STATUS_CLASS, FORMAT_LABELS } from "@/lib/content";
+import { PLATFORM_LABELS, FORMAT_LABELS } from "@/lib/content";
+import { StatusPicker } from "./StatusPicker";
+import type { ContentStatus } from "@/generated/prisma/enums";
 import type { Piece } from "./types";
 
 export function ListView({
   pieces,
   onPieceClick,
+  onChangeStatus,
   highlightId,
 }: {
   pieces: Piece[];
   onPieceClick: (p: Piece) => void;
+  onChangeStatus: (pieceId: string, status: ContentStatus) => void;
   highlightId?: string | null;
 }) {
   const sorted = [...pieces].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
@@ -57,11 +61,8 @@ export function ListView({
               <td className="py-3 pr-2" style={{ borderTop: "1px solid var(--border)", color: "var(--text-dim)" }}>{PLATFORM_LABELS[p.platform]}</td>
               <td className="py-3 pr-2" style={{ borderTop: "1px solid var(--border)", color: "var(--text-dim)" }}>{p.format ? FORMAT_LABELS[p.format] : "—"}</td>
               <td className="py-3 pr-2" style={{ borderTop: "1px solid var(--border)" }}>{p.topic?.name ?? "—"}</td>
-              <td className="py-3 pr-2" style={{ borderTop: "1px solid var(--border)" }}>
-                <span className={`status-pill ${STATUS_CLASS[p.status]}`}>
-                  <span className="d" />
-                  {STATUS_LABELS[p.status]}
-                </span>
+              <td className="py-3 pr-2" style={{ borderTop: "1px solid var(--border)" }} onClick={(e) => e.stopPropagation()}>
+                <StatusPicker value={p.status} onChange={(status) => onChangeStatus(p.id, status)} />
               </td>
               <td className="py-3 pr-2" style={{ borderTop: "1px solid var(--border)", color: "var(--sky)" }}>{p.hashtags ?? "—"}</td>
             </tr>

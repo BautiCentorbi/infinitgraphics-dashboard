@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
+import { motion } from "motion/react";
 import {
   createContentPiece,
   updateContentPiece,
@@ -8,7 +9,9 @@ import {
   addAdminComment,
   type PieceFormState,
 } from "./actions";
-import { PLATFORMS, PLATFORM_LABELS, STATUSES, STATUS_LABELS, FORMATS, FORMAT_LABELS } from "@/lib/content";
+import { PLATFORMS, PLATFORM_LABELS, FORMATS, FORMAT_LABELS } from "@/lib/content";
+import { StatusPicker } from "./StatusPicker";
+import type { ContentStatus } from "@/generated/prisma/enums";
 import type { Piece, TopicOption } from "./types";
 
 const initialState: PieceFormState = { error: null };
@@ -37,6 +40,11 @@ export function PieceModal({
     return result;
   }, initialState);
 
+  // El StatusPicker no es un <select> nativo, así que no manda su valor
+  // solo — lo llevamos en estado y lo mandamos con un input hidden, para
+  // que se guarde junto con el resto de los campos al tocar "Guardar".
+  const [status, setStatus] = useState<ContentStatus>(piece?.status ?? "draft");
+
   const commentFormRef = useRef<HTMLFormElement>(null);
   const [commentState, commentFormAction, commentPending] = useActionState(
     async (prev: PieceFormState, fd: FormData) => {
@@ -48,8 +56,19 @@ export function PieceModal({
   );
 
   return (
-    <div className="fixed inset-0 z-20 flex items-center justify-center p-4" style={{ background: "oklch(0 0 0 / 0.55)", backdropFilter: "blur(2px)" }}>
-      <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 z-20 flex items-center justify-center p-4"
+      style={{ background: "oklch(0 0 0 / 0.55)", backdropFilter: "blur(2px)" }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 12 }}
+        transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
         className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[18px] border p-6.5"
         style={{ borderColor: "var(--border-strong)", background: "var(--surface)", boxShadow: "0 30px 80px -20px oklch(0 0 0 / 0.6)" }}
       >
@@ -122,22 +141,11 @@ export function PieceModal({
           </div>
 
           {piece && (
-            <label className={labelCls} style={{ color: "var(--text-dim)" }}>
+            <div className={labelCls} style={{ color: "var(--text-dim)" }}>
               Estado
-              <select
-                name="status"
-                defaultValue={piece.status}
-                disabled
-                className={inputCls}
-                style={{ borderColor: "var(--border)", color: "var(--text-faint)" }}
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <input type="hidden" name="status" value={status} />
+              <StatusPicker value={status} onChange={setStatus} />
+            </div>
           )}
 
           <label className={labelCls} style={{ color: "var(--text-dim)" }}>
@@ -253,7 +261,7 @@ export function PieceModal({
             </form>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

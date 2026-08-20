@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { CalendarView } from "./CalendarView";
 import { KanbanView } from "./KanbanView";
@@ -92,6 +93,16 @@ export function CalendarApp({
     setModal({ mode: "edit", piece });
   }
 
+  // Cambio de estado directo desde el StatusPicker — disponible en el
+  // popover de hover, la vista Lista y el modal de edición, no hace falta
+  // arrastrar en el kanban para esto.
+  async function handleStatusChange(pieceId: string, status: ContentStatus) {
+    setPieces((prev) => prev.map((p) => (p.id === pieceId ? { ...p, status } : p)));
+    setPreview((prev) => (prev && prev.piece.id === pieceId ? { ...prev, piece: { ...prev.piece, status } } : prev));
+    await changePieceStatus(pieceId, slug, status);
+    router.refresh();
+  }
+
   function closeModal() {
     setModal(null);
     router.refresh();
@@ -151,12 +162,12 @@ export function CalendarApp({
             </div>
           ))}
         </div>
-        <button onClick={() => setModal({ mode: "create" })} className="btn-grad">
+        <motion.button whileTap={{ scale: 0.95 }} onClick={() => setModal({ mode: "create" })} className="btn-grad">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
           Nueva pieza
-        </button>
+        </motion.button>
       </div>
 
       <TopicManager clientId={clientId} slug={slug} topics={initialTopics} />
@@ -176,50 +187,68 @@ export function CalendarApp({
 
       <DndContext onDragEnd={handleDragEnd}>
         {view === "calendar" && (
-          <CalendarView
-            pieces={filteredPieces}
-            onPieceClick={jumpToList}
-            onEmptyClick={(dateKey) => setModal({ mode: "create", defaultDate: dateKey })}
-            onHoverStart={showPreview}
-            onHoverEnd={scheduleHidePreview}
-            cardFields={cardFields}
-          />
+          <motion.div key="calendar" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
+            <CalendarView
+              pieces={filteredPieces}
+              onPieceClick={jumpToList}
+              onEmptyClick={(dateKey) => setModal({ mode: "create", defaultDate: dateKey })}
+              onHoverStart={showPreview}
+              onHoverEnd={scheduleHidePreview}
+              cardFields={cardFields}
+            />
+          </motion.div>
         )}
         {view === "kanban" && (
-          <KanbanView
-            pieces={filteredPieces}
-            onPieceClick={jumpToList}
-            onHoverStart={showPreview}
-            onHoverEnd={scheduleHidePreview}
-            cardFields={cardFields}
-          />
+          <motion.div key="kanban" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
+            <KanbanView
+              pieces={filteredPieces}
+              onPieceClick={jumpToList}
+              onHoverStart={showPreview}
+              onHoverEnd={scheduleHidePreview}
+              cardFields={cardFields}
+            />
+          </motion.div>
         )}
       </DndContext>
 
       {view === "list" && (
-        <ListView pieces={filteredPieces} onPieceClick={openEdit} highlightId={highlightId} />
+        <motion.div key="list" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
+          <ListView
+            pieces={filteredPieces}
+            onPieceClick={openEdit}
+            onChangeStatus={handleStatusChange}
+            highlightId={highlightId}
+          />
+        </motion.div>
       )}
 
-      {preview && (
-        <PiecePreview
-          piece={preview.piece}
-          anchorRect={preview.rect}
-          onEdit={() => openEdit(preview.piece)}
-          onMouseEnter={cancelHidePreview}
-          onMouseLeave={scheduleHidePreview}
-        />
-      )}
+      <AnimatePresence>
+        {preview && (
+          <PiecePreview
+            key={preview.piece.id}
+            piece={preview.piece}
+            anchorRect={preview.rect}
+            onEdit={() => openEdit(preview.piece)}
+            onChangeStatus={(status) => handleStatusChange(preview.piece.id, status)}
+            onMouseEnter={cancelHidePreview}
+            onMouseLeave={scheduleHidePreview}
+          />
+        )}
+      </AnimatePresence>
 
-      {modal && (
-        <PieceModal
-          clientId={clientId}
-          slug={slug}
-          topics={initialTopics}
-          piece={modal.mode === "edit" ? modal.piece : null}
-          defaultDate={modal.mode === "create" ? modal.defaultDate : undefined}
-          onClose={closeModal}
-        />
-      )}
+      <AnimatePresence>
+        {modal && (
+          <PieceModal
+            key={modal.mode === "edit" ? modal.piece.id : "new"}
+            clientId={clientId}
+            slug={slug}
+            topics={initialTopics}
+            piece={modal.mode === "edit" ? modal.piece : null}
+            defaultDate={modal.mode === "create" ? modal.defaultDate : undefined}
+            onClose={closeModal}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

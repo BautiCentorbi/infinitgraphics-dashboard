@@ -59,28 +59,45 @@ export async function updateContentPiece(
   _prevState: PieceFormState,
   formData: FormData
 ): Promise<PieceFormState> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Sesión inválida." };
+
   const id = formData.get("id") as string;
   const slug = formData.get("slug") as string;
+  const status = formData.get("status") as ContentStatus | null;
   const { title, platform, format, scheduledDateRaw, copy, hashtags, mediaUrl, internalNotes, topicId } =
     readPieceFields(formData);
 
   if (!title) return { error: "El título es obligatorio." };
   if (!scheduledDateRaw) return { error: "La fecha es obligatoria." };
 
-  await prisma.contentPiece.update({
-    where: { id },
-    data: {
-      title,
-      platform,
-      format,
-      scheduledDate: new Date(scheduledDateRaw),
-      copy,
-      hashtags,
-      mediaUrl,
-      internalNotes,
-      topicId,
-    },
-  });
+  // El estado ahora se edita desde el mismo modal (Calendario/Kanban/Lista
+  // abren el mismo modal) — no hace falta pasar por el drag & drop del
+  // kanban. Si cambió, dejamos el mismo registro de auditoría que
+  // changePieceStatus.
+  const current = await prisma.contentPiece.findUnique({ where: { id }, select: { status: true } });
+  const newStatus: ContentStatus | null = status && current && status !== current.status ? status : null;
+
+  await prisma.$transaction([
+    prisma.contentPiece.update({
+      where: { id },
+      data: {
+        title,
+        platform,
+        format,
+        scheduledDate: new Date(scheduledDateRaw),
+        copy,
+        hashtags,
+        mediaUrl,
+        internalNotes,
+        topicId,
+        ...(status ? { status } : {}),
+      },
+    }),
+    ...(newStatus
+      ? [prisma.approvalEvent.create({ data: { contentPieceId: id, status: newStatus, changedById: session.user.id } })]
+      : []),
+  ]);
 
   revalidatePath(`/admin/${slug}/calendar`);
   return { error: null };

@@ -1,6 +1,9 @@
 "use client";
 
-import { PLATFORM_LABELS, STATUS_CLASS, STATUS_LABELS, FORMAT_LABELS } from "@/lib/content";
+import { motion } from "motion/react";
+import { PLATFORM_LABELS, FORMAT_LABELS } from "@/lib/content";
+import { StatusPicker } from "./StatusPicker";
+import type { ContentStatus } from "@/generated/prisma/enums";
 import type { Piece } from "./types";
 
 // Popover que aparece al hacer hover sobre una pieza (Calendario/Kanban) sin
@@ -13,12 +16,14 @@ export function PiecePreview({
   piece,
   anchorRect,
   onEdit,
+  onChangeStatus,
   onMouseEnter,
   onMouseLeave,
 }: {
   piece: Piece;
   anchorRect: DOMRect;
   onEdit: () => void;
+  onChangeStatus: (status: ContentStatus) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
@@ -31,7 +36,11 @@ export function PiecePreview({
   const top = Math.min(anchorRect.top, window.innerHeight - 320);
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: 6 }}
+      transition={{ duration: 0.16, ease: [0.2, 0.8, 0.2, 1] }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       className="fixed z-30 rounded-[16px] border p-4 text-left text-xs"
@@ -52,10 +61,11 @@ export function PiecePreview({
         {piece.format && ` · ${FORMAT_LABELS[piece.format]}`} · {new Date(piece.scheduledDate).toLocaleDateString("es-AR")}
         {piece.topic && ` · ${piece.topic.name}`}
       </p>
-      <span className={`status-pill mb-2.5 ${STATUS_CLASS[piece.status]}`}>
-        <span className="d" />
-        {STATUS_LABELS[piece.status]}
-      </span>
+
+      <div className="mb-2.5">
+        <StatusPicker value={piece.status} onChange={onChangeStatus} />
+      </div>
+
       {piece.copy && (
         <p className="mt-2.5 line-clamp-3" style={{ color: "var(--text-dim)" }}>
           {piece.copy}
@@ -82,10 +92,10 @@ export function PiecePreview({
           </svg>
           {piece.comments.length}
         </span>
-        <button onClick={onEdit} className="text-[12px] font-bold" style={{ color: "var(--sky)" }}>
+        <motion.button whileTap={{ scale: 0.94 }} onClick={onEdit} className="text-[12px] font-bold" style={{ color: "var(--sky)" }}>
           Editar →
-        </button>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }

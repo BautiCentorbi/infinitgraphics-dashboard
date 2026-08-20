@@ -25,7 +25,12 @@ export function PieceDetail({
     return result;
   }, initialState);
 
-  const canReview = piece.status === "in_review" || piece.status === "changes_requested";
+  // El cliente puede aprobar/pedir cambios en cualquier estado previo a
+  // "publicado" — incluido "programado" (todavía se puede frenar/corregir
+  // antes de que salga). En "aprobado" y "publicado" solo puede comentar.
+  // "borrador" nunca llega acá — el cliente ni lo ve (ver /c/[slug]/page.tsx).
+  const canReview =
+    piece.status === "in_review" || piece.status === "changes_requested" || piece.status === "scheduled";
 
   return (
     <div className="fixed inset-0 z-20 flex items-center justify-center p-4" style={{ background: "oklch(0 0 0 / 0.55)", backdropFilter: "blur(2px)" }}>
