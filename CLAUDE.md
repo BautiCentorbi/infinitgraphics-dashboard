@@ -420,6 +420,64 @@ connection string de Neon.
 - Decidir si vale la pena separar una DB de desarrollo distinta de la de
   producción en Neon (hoy comparten la misma) — no urgente a esta escala.
 
+### Configuración: administradores + notificaciones por mail (2026-08-21)
+
+**`/admin/settings`** — sección "Administradores": listar, invitar (email +
+contraseña) y borrar. Todos los administradores tienen el mismo acceso (ven
+y gestionan todos los clientes, no hay permisos más finos todavía).
+Protecciones: no podés borrarte a vos mismo desde ahí, y siempre tiene que
+quedar al menos un administrador (`src/app/admin/settings/actions.ts`).
+
+**Notificaciones por mail** — vía **Resend**, con dominio propio
+**`bcentorbi.online`** ya verificado por Bautista. `src/lib/email.ts`
+(`import "server-only"`) expone dos funciones:
+
+- `notifyAdminsOfClientActivity`: el cliente comenta, aprueba o pide
+  cambios en una pieza desde `/c/[slug]` → mail a **todos** los
+  administradores (no solo a quien creó la pieza — decisión tomada con
+  Bautista el 2026-08-21). Enganchado en `src/app/c/[slug]/actions.ts`
+  (`addComment` y `clientSetStatus`, esta última cubre tanto aprobar como
+  pedir cambios).
+- `notifyNewAdmin`: se agrega un administrador nuevo desde
+  `/admin/settings` → mail de bienvenida a esa persona. **A propósito no
+  incluye la contraseña** (mismo criterio que el resto del proyecto: nunca
+  poner secretos donde no hace falta) — la contraseña se la pasa quien
+  invita, por fuera del mail.
+- Los envíos **nunca rompen el flujo principal**: `sendEmail` en
+  `email.ts` loguea y traga el error si Resend falla, no lo propaga. Si
+  falta `RESEND_API_KEY`, solo lo advierte por consola y sigue.
+- Env vars: `RESEND_API_KEY`, `EMAIL_FROM` (`"cm-suite <notificaciones@
+  bcentorbi.online>"`) — en `.env` local y en las 3 environments de Vercel.
+
+**Identidad visual del mail** — a pedido de Bautista, alineada a
+**Infinite Graphics** (bcentorbi.com: minimalista, blanco/negro/grises,
+acento azul frío), no al dark-first de la app (los mails van con fondo
+claro a propósito, por legibilidad/compatibilidad entre clientes de
+correo):
+
+- Logo real de Infinite Graphics (bajado de bcentorbi.com, convertido a
+  PNG con `sharp`, subido una sola vez a Vercel Blob —
+  `brand/infinite-graphics-logo.png`, store `cm-suite-docs`, público) —
+  centrado arriba de la tarjeta, con el tag "cm-suite" chico debajo.
+- Tarjeta blanca centrada, `max-width: 480px`, sobre fondo gris muy claro.
+- Acento **azul `#155dfc`** para el botón principal (CTA) — puente entre
+  el azul de bcentorbi.com y el celeste/azul de cm-suite.
+- Badges de color por tipo de acción en el mail de actividad de cliente:
+  azul (comentario), verde (aprobado), **ámbar** (cambios pedidos — nexo
+  con el contraste cálido de la identidad de cm-suite).
+- Tipografía: stack de sistema (`-apple-system, Segoe UI, Helvetica,
+  Arial`) — las fuentes de la app (Bricolage Grotesque/Plus Jakarta Sans)
+  no cargan de forma confiable en clientes de correo, no usarlas acá.
+- 3 iteraciones de preview reales (mails de verdad a la casilla de
+  Bautista) antes de aprobar el diseño final — no asumir el resultado
+  visual de HTML de mail sin mandarlo de verdad, los clientes de correo
+  rendean distinto a un navegador.
+
+**Dominio de producción:** el deploy de hoy quedó aliasado también a
+**`https://www.bcentorbi.online`** (dominio propio conectado al proyecto
+Vercel `cm-suite`, además del `cm-suite-delta.vercel.app` de siempre — los
+dos apuntan al mismo deployment).
+
 ## Pendiente de definir (no bloqueante, ver detalle en ARCHITECTURE.md)
 
 - Neon vs Vercel Postgres.
