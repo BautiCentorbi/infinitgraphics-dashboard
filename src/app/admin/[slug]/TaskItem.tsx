@@ -10,25 +10,32 @@ export function TaskItem({
   slug: string;
 }) {
   return (
-    <li className="flex items-center justify-between gap-2 rounded border border-black/10 px-3 py-2 dark:border-white/10">
-      <form action={toggleTask} className="flex flex-1 items-center gap-2">
+    <li className="surface flex items-center justify-between gap-2 rounded-[12px] px-3.5 py-2.5">
+      <form action={toggleTask} className="flex flex-1 items-center gap-2.5">
         <input type="hidden" name="id" value={task.id} />
         <input type="hidden" name="slug" value={slug} />
         <input type="hidden" name="done" value={String(task.done)} />
         <button type="submit" aria-label="Marcar como hecha" className="shrink-0">
           <span
-            className={`flex h-4 w-4 items-center justify-center rounded border ${
-              task.done ? "border-black bg-black dark:border-white dark:bg-white" : "border-black/40 dark:border-white/40"
-            }`}
+            className="flex h-4 w-4 items-center justify-center rounded"
+            style={
+              task.done
+                ? { background: "var(--grad)" }
+                : { border: "1.5px solid var(--border-strong)" }
+            }
           >
-            {task.done && <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-black" />}
+            {task.done && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="h-2.5 w-2.5">
+                <path d="M4 12l6 6L20 6" />
+              </svg>
+            )}
           </span>
         </button>
-        <span className={`text-sm ${task.done ? "text-black/40 line-through dark:text-white/40" : ""}`}>
+        <span className="text-sm" style={task.done ? { color: "var(--text-faint)", textDecoration: "line-through" } : undefined}>
           {task.title}
         </span>
         {task.dueDate && (
-          <span className="text-xs text-black/50 dark:text-white/50">
+          <span className="text-xs" style={{ color: "var(--text-faint)" }}>
             {new Date(task.dueDate).toLocaleDateString("es-AR")}
           </span>
         )}
@@ -36,7 +43,7 @@ export function TaskItem({
       <form action={deleteTask}>
         <input type="hidden" name="id" value={task.id} />
         <input type="hidden" name="slug" value={slug} />
-        <button type="submit" className="text-sm text-black/60 dark:text-white/60">
+        <button type="submit" className="text-sm" style={{ color: "var(--text-dim)" }}>
           Borrar
         </button>
       </form>

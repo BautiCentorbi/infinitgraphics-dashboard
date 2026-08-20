@@ -14,7 +14,7 @@ export function NoteItem({
 
   if (editing) {
     return (
-      <li className="rounded border border-black/10 p-3 dark:border-white/10">
+      <li className="surface rounded-[14px] p-3.5">
         <form
           action={async (formData) => {
             await updateNote(formData);
@@ -28,19 +28,21 @@ export function NoteItem({
             name="title"
             defaultValue={note.title}
             autoFocus
-            className="rounded border border-black/20 px-2 py-1 text-sm dark:border-white/20"
+            className="rounded-[9px] border bg-black/20 px-2.5 py-1.5 text-sm outline-none"
+            style={{ borderColor: "var(--border)" }}
           />
           <textarea
             name="body"
             defaultValue={note.body}
             rows={3}
-            className="rounded border border-black/20 px-2 py-1 text-sm dark:border-white/20"
+            className="rounded-[9px] border bg-black/20 px-2.5 py-1.5 text-sm outline-none"
+            style={{ borderColor: "var(--border)" }}
           />
           <div className="flex gap-3 text-sm">
-            <button type="submit" className="underline">
+            <button type="submit" className="font-semibold underline">
               Guardar
             </button>
-            <button type="button" onClick={() => setEditing(false)} className="text-black/50 dark:text-white/50">
+            <button type="button" onClick={() => setEditing(false)} style={{ color: "var(--text-faint)" }}>
               Cancelar
             </button>
           </div>
@@ -50,24 +52,24 @@ export function NoteItem({
   }
 
   return (
-    <li className="rounded border border-black/10 p-3 dark:border-white/10">
+    <li className="surface surface-hover card-anim rounded-[14px] p-3.5 transition-colors">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-medium">{note.title}</p>
+          <p className="font-semibold">{note.title}</p>
           {note.body && (
-            <p className="mt-1 whitespace-pre-wrap text-sm text-black/70 dark:text-white/70">
+            <p className="mt-1 text-sm whitespace-pre-wrap" style={{ color: "var(--text-dim)" }}>
               {note.body}
             </p>
           )}
         </div>
-        <div className="flex shrink-0 gap-2 text-sm">
-          <button onClick={() => setEditing(true)} className="text-black/60 dark:text-white/60">
+        <div className="flex shrink-0 gap-2.5 text-sm">
+          <button onClick={() => setEditing(true)} style={{ color: "var(--text-dim)" }}>
             Editar
           </button>
           <form action={deleteNote}>
             <input type="hidden" name="id" value={note.id} />
             <input type="hidden" name="slug" value={slug} />
-            <button type="submit" className="text-black/60 dark:text-white/60">
+            <button type="submit" style={{ color: "var(--text-dim)" }}>
               Borrar
             </button>
           </form>

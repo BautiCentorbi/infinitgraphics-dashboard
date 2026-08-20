@@ -75,31 +75,26 @@ export function CalendarApp({
 
   const tabs: { key: View; label: string }[] = [
     { key: "calendar", label: "Calendario" },
-    { key: "list", label: "Lista" },
     { key: "kanban", label: "Kanban" },
+    { key: "list", label: "Lista" },
   ];
+  const TAB_W = 108;
+  const activeIdx = tabs.findIndex((t) => t.key === view);
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex gap-1 rounded border border-black/10 p-1 text-sm dark:border-white/10">
+      <div className="mb-5 flex items-center justify-between">
+        <div className="tabs">
+          <div className="tab-indicator" style={{ width: TAB_W, transform: `translateX(${activeIdx * TAB_W}px)` }} />
           {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setView(t.key)}
-              className={`rounded px-3 py-1 ${
-                view === t.key ? "bg-black text-white dark:bg-white dark:text-black" : ""
-              }`}
-            >
+            <div key={t.key} className="tab" data-active={view === t.key} style={{ width: TAB_W, textAlign: "center" }} onClick={() => setView(t.key)}>
               {t.label}
-            </button>
+            </div>
           ))}
         </div>
-        <button
-          onClick={() => setModal({ mode: "create" })}
-          className="rounded bg-black px-4 py-2 text-sm text-white dark:bg-white dark:text-black"
-        >
-          + Nueva pieza
+        <button onClick={() => setModal({ mode: "create" })} className="btn-grad">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+          Nueva pieza
         </button>
       </div>
 

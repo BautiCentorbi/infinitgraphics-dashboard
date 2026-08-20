@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PLATFORM_LABELS, STATUS_COLORS, STATUS_LABELS } from "@/lib/content";
+import { PLATFORM_LABELS, STATUS_CLASS, STATUS_LABELS } from "@/lib/content";
 import { PieceDetail } from "./PieceDetail";
 import type { ClientPiece } from "./types";
 
@@ -30,8 +30,8 @@ export function ClientCalendar({ slug, initialPieces }: { slug: string; initialP
   return (
     <div>
       {pending.length > 0 && (
-        <section className="mb-6">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
+        <section className="mb-7">
+          <h2 className="mb-2.5 text-xs font-bold tracking-wide uppercase" style={{ color: "var(--text-faint)" }}>
             Pendientes de tu revisión
           </h2>
           <PieceList pieces={pending} onSelect={setSelected} />
@@ -39,11 +39,11 @@ export function ClientCalendar({ slug, initialPieces }: { slug: string; initialP
       )}
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
+        <h2 className="mb-2.5 text-xs font-bold tracking-wide uppercase" style={{ color: "var(--text-faint)" }}>
           Todo el calendario
         </h2>
         {rest.length === 0 && pending.length === 0 ? (
-          <p className="text-sm text-black/60 dark:text-white/60">
+          <p className="text-sm" style={{ color: "var(--text-dim)" }}>
             Todavía no hay contenido compartido para revisar.
           </p>
         ) : (
@@ -63,15 +63,16 @@ function PieceList({ pieces, onSelect }: { pieces: ClientPiece[]; onSelect: (p: 
         <li key={p.id}>
           <button
             onClick={() => onSelect(p)}
-            className="flex w-full items-center justify-between gap-2 rounded border border-black/10 px-3 py-2 text-left text-sm hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
+            className="surface surface-hover flex w-full items-center justify-between gap-2 rounded-[13px] px-3.5 py-2.5 text-left text-sm transition-colors"
           >
             <span>
-              <span className="font-medium">{p.title}</span>
-              <span className="ml-2 text-black/50 dark:text-white/50">
+              <span className="font-semibold">{p.title}</span>
+              <span className="ml-2" style={{ color: "var(--text-faint)" }}>
                 {PLATFORM_LABELS[p.platform]} · {new Date(p.scheduledDate).toLocaleDateString("es-AR")}
               </span>
             </span>
-            <span className={`shrink-0 rounded px-2 py-1 text-xs ${STATUS_COLORS[p.status]}`}>
+            <span className={`status-pill shrink-0 ${STATUS_CLASS[p.status]}`}>
+              <span className="d" />
               {STATUS_LABELS[p.status]}
             </span>
           </button>

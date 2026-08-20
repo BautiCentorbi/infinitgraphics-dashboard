@@ -6,6 +6,7 @@ import { NoteItem } from "./NoteItem";
 import { NewTaskForm } from "./NewTaskForm";
 import { TaskItem } from "./TaskItem";
 import { ClientAccess } from "./ClientAccess";
+import { AdminNav } from "@/components/AdminNav";
 
 export const dynamic = "force-dynamic";
 
@@ -25,54 +26,54 @@ export default async function ClientWorkspacePage({
   ]);
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <Link href="/admin" className="text-sm text-black/60 hover:underline dark:text-white/60">
-        ← Clientes
-      </Link>
-      <div className="mt-2 mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">{client.name}</h1>
-        <Link
-          href={`/admin/${client.slug}/calendar`}
-          className="rounded bg-black px-4 py-2 text-sm text-white dark:bg-white dark:text-black"
-        >
-          Calendario de contenido →
+    <div className="bg-app min-h-screen">
+      <AdminNav active="clientes" calendarSlug={client.slug} />
+
+      <div className="mx-auto max-w-2xl px-6 py-10">
+        <Link href="/admin" className="text-sm hover:underline" style={{ color: "var(--text-dim)" }}>
+          ← Clientes
         </Link>
+        <div className="mt-2 mb-7 flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight font-display">{client.name}</h1>
+          <Link href={`/admin/${client.slug}/calendar`} className="btn-grad">
+            Calendario de contenido →
+          </Link>
+        </div>
+
+        <ClientAccess clientId={client.id} slug={client.slug} users={clientUsers} />
+
+        <section className="mb-8">
+          <h2 className="mb-3 text-xs font-bold tracking-wide uppercase" style={{ color: "var(--text-faint)" }}>
+            Tareas
+          </h2>
+          <NewTaskForm clientId={client.id} slug={client.slug} />
+          {tasks.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--text-dim)" }}>Sin tareas todavía.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {tasks.map((task) => (
+                <TaskItem key={task.id} task={task} slug={client.slug} />
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-xs font-bold tracking-wide uppercase" style={{ color: "var(--text-faint)" }}>
+            Notas
+          </h2>
+          <NewNoteForm clientId={client.id} slug={client.slug} />
+          {notes.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--text-dim)" }}>Sin notas todavía.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {notes.map((note) => (
+                <NoteItem key={note.id} note={note} slug={client.slug} />
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
-
-      <ClientAccess clientId={client.id} slug={client.slug} users={clientUsers} />
-
-      <section className="mb-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
-          Tareas
-        </h2>
-        <NewTaskForm clientId={client.id} slug={client.slug} />
-        {tasks.length === 0 ? (
-          <p className="text-sm text-black/60 dark:text-white/60">Sin tareas todavía.</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {tasks.map((task) => (
-              <TaskItem key={task.id} task={task} slug={client.slug} />
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
-          Notas
-        </h2>
-        <NewNoteForm clientId={client.id} slug={client.slug} />
-        {notes.length === 0 ? (
-          <p className="text-sm text-black/60 dark:text-white/60">Sin notas todavía.</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {notes.map((note) => (
-              <NoteItem key={note.id} note={note} slug={client.slug} />
-            ))}
-          </ul>
-        )}
-      </section>
-
     </div>
   );
 }

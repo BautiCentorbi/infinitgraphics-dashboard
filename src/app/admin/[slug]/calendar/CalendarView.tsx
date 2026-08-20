@@ -28,18 +28,26 @@ function DayCell({
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-28 flex-col gap-1 border border-black/10 p-1 dark:border-white/10 ${
-        inMonth ? "" : "opacity-40"
-      } ${isOver ? "bg-black/5 dark:bg-white/10" : ""}`}
+      className="flex min-h-28 flex-col gap-1 p-1.5 transition-colors"
+      style={{
+        background: isOver ? "var(--surface-2)" : "var(--bg)",
+        opacity: inMonth ? 1 : 0.35,
+      }}
     >
       <div className="flex items-center justify-between">
-        <span className={`text-xs ${isToday ? "font-bold" : "text-black/50 dark:text-white/50"}`}>
-          {date.getDate()}
-        </span>
-        <button
-          onClick={() => onEmptyClick(dateKey)}
-          className="text-xs text-black/30 hover:text-black/70 dark:text-white/30 dark:hover:text-white/70"
-        >
+        {isToday ? (
+          <span
+            className="flex h-[19px] w-[19px] items-center justify-center rounded-full text-[11.5px] font-bold text-white"
+            style={{ background: "var(--grad)" }}
+          >
+            {date.getDate()}
+          </span>
+        ) : (
+          <span className="text-[11.5px] font-semibold" style={{ color: "var(--text-faint)" }}>
+            {date.getDate()}
+          </span>
+        )}
+        <button onClick={() => onEmptyClick(dateKey)} className="text-xs" style={{ color: "var(--text-faint)" }}>
           +
         </button>
       </div>
@@ -75,24 +83,30 @@ export function CalendarView({
       <div className="mb-3 flex items-center justify-between">
         <button
           onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))}
-          className="text-sm"
+          className="surface flex h-[30px] w-[30px] items-center justify-center rounded-[9px] text-sm transition-colors"
+          style={{ color: "var(--text-dim)" }}
         >
-          ← Mes anterior
+          ‹
         </button>
-        <span className="text-sm font-medium">
+        <span className="text-[15px] font-bold capitalize">
           {monthCursor.toLocaleDateString("es-AR", { month: "long", year: "numeric" })}
         </span>
         <button
           onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))}
-          className="text-sm"
+          className="surface flex h-[30px] w-[30px] items-center justify-center rounded-[9px] text-sm transition-colors"
+          style={{ color: "var(--text-dim)" }}
         >
-          Mes siguiente →
+          ›
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-px bg-black/10 text-xs dark:bg-white/10">
+      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-[14px] border" style={{ background: "var(--border)", borderColor: "var(--border)" }}>
         {WEEKDAY_LABELS.map((d) => (
-          <div key={d} className="bg-white p-1 text-center text-black/50 dark:bg-black dark:text-white/50">
+          <div
+            key={d}
+            className="p-2 text-center text-[11px] font-bold tracking-wide uppercase"
+            style={{ background: "var(--surface)", color: "var(--text-faint)" }}
+          >
             {d}
           </div>
         ))}

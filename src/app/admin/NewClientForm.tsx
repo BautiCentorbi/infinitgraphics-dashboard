@@ -9,23 +9,24 @@ export function NewClientForm() {
   const [state, formAction, pending] = useActionState(createClient, initialState);
 
   return (
-    <form action={formAction} className="mb-6 flex flex-col gap-2">
-      <div className="flex gap-2">
-        <input
-          name="name"
-          placeholder="Nombre del cliente (ej. Cuenca del Sur)"
-          required
-          className="flex-1 rounded border border-black/20 px-3 py-2 text-sm dark:border-white/20"
-        />
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
-        >
+    <form action={formAction} className="mb-7 flex flex-col gap-2">
+      <div className="flex gap-2.5">
+        <div className="surface flex flex-1 items-center gap-2.5 rounded-[11px] px-3.5 py-2.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" strokeWidth="2" strokeLinecap="round" className="h-4 w-4 shrink-0">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <input
+            name="name"
+            placeholder="Nombre del cliente (ej. Cuenca del Sur)"
+            required
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--text-faint)]"
+          />
+        </div>
+        <button type="submit" disabled={pending} className="btn-grad">
           {pending ? "Agregando..." : "Agregar"}
         </button>
       </div>
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-red-400">{state.error}</p>}
     </form>
   );
 }

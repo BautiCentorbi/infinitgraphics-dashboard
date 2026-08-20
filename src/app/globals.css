@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Identidad visual — cm-suite
+   Definida en el diseño de Claude Design (2026-08-21), llevada acá
+   1:1. Paleta: celeste + azul (fríos, familia) con ámbar como
+   contraste cálido opuesto. Dark-first — es la app de trabajo diario
+   del CM, no una landing pública.
+   Ver ARCHITECTURE.md, sección "Identidad visual".
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: oklch(0.16 0.02 275);
+  --surface: oklch(0.205 0.026 275);
+  --surface-2: oklch(0.25 0.03 275);
+  --surface-3: oklch(0.29 0.032 275);
+  --border: oklch(1 0 0 / 0.09);
+  --border-strong: oklch(1 0 0 / 0.18);
+  --text: oklch(0.97 0.006 275);
+  --text-dim: oklch(0.75 0.02 275);
+  --text-faint: oklch(0.55 0.02 275);
+
+  --sky: oklch(0.72 0.15 215);
+  --blue: oklch(0.56 0.21 258);
+  --amber: oklch(0.78 0.17 65);
+  --teal: oklch(0.72 0.15 165);
+
+  --grad: linear-gradient(135deg, var(--sky), var(--blue) 55%, var(--amber));
+  --grad-shadow: oklch(0.5 0.18 236 / 0.55);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body), system-ui, sans-serif;
 }
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+a { color: var(--sky); text-decoration: none; }
+a:hover { color: var(--blue); }
+
+/* ---- Fondo con blobs animados (login / pantallas de entrada) ---- */
+.bg-blobs { position: relative; overflow: hidden; }
+.bg-blobs::before,
+.bg-blobs::after {
+  content: ""; position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.45; z-index: 0;
+}
+.bg-blobs::before {
+  width: 560px; height: 560px; background: var(--sky); top: -160px; left: -120px;
+  animation: blobFloat1 16s ease-in-out infinite alternate;
+}
+.bg-blobs::after {
+  width: 460px; height: 460px; background: var(--blue); bottom: -140px; right: -100px;
+  animation: blobFloat2 20s ease-in-out infinite alternate;
+}
+@keyframes blobFloat1 { to { transform: translate(50px, 35px) scale(1.08); } }
+@keyframes blobFloat2 { to { transform: translate(-40px, -25px) scale(1.1); } }
+
+.bg-app {
+  background:
+    radial-gradient(900px 500px at 8% -10%, oklch(0.72 0.15 215 / 0.14), transparent 60%),
+    radial-gradient(700px 500px at 100% 0%, oklch(0.56 0.21 258 / 0.1), transparent 55%),
+    var(--bg);
+}
+
+/* ---- Botón primario con gradiente de marca ---- */
+.btn-grad {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: none; border-radius: 12px; padding: 11px 18px;
+  background: var(--grad); background-size: 160% 160%; background-position: 0% 50%;
+  color: white; font-weight: 700; font-size: 14px; cursor: pointer;
+  box-shadow: 0 10px 28px -8px var(--grad-shadow);
+  transition: transform .15s ease, box-shadow .2s ease, background-position .5s ease;
+}
+.btn-grad:hover { background-position: 100% 50%; box-shadow: 0 14px 34px -6px var(--grad-shadow); transform: translateY(-2px); }
+.btn-grad:active { transform: translateY(0) scale(0.97); }
+.btn-grad:disabled { cursor: default; opacity: 0.7; transform: none; }
+
+/* ---- Superficies ---- */
+.surface { background: var(--surface); border: 1px solid var(--border); }
+.surface-hover:hover { border-color: var(--border-strong); background: var(--surface-2); }
+
+.card-anim {
+  animation: cardIn .5s cubic-bezier(.2,.8,.2,1) both;
+  transition: transform .22s ease, border-color .22s ease, background .22s ease;
+}
+@keyframes cardIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.avatar-ring {
+  padding: 2px; border-radius: 50%; background: var(--grad);
+}
+.avatar-ring .inner {
+  border-radius: 50%; background: var(--bg);
+  display: flex; align-items: center; justify-content: center; font-weight: 700;
+}
+
+/* ---- Tabs con indicador deslizante ---- */
+.tabs { position: relative; display: inline-flex; padding: 4px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); gap: 2px; }
+.tab { position: relative; z-index: 2; padding: 8px 18px; border-radius: 9px; font-size: 13.5px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: color .2s ease; }
+.tab[data-active="true"] { color: white; }
+.tab-indicator {
+  position: absolute; top: 4px; bottom: 4px; border-radius: 9px; background: var(--grad);
+  transition: transform .32s cubic-bezier(.2,.8,.2,1), width .32s cubic-bezier(.2,.8,.2,1);
+  z-index: 1; box-shadow: 0 6px 16px -4px var(--grad-shadow);
+}
+
+/* ---- Badges de estado (piezas de calendario) ---- */
+.status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.status-pill .d { width: 5px; height: 5px; border-radius: 50%; }
+@keyframes pillPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.status-draft { background: oklch(1 0 0 / 0.08); color: var(--text-dim); }
+.status-draft .d { background: var(--text-dim); }
+.status-in_review { background: oklch(0.72 0.15 215 / 0.16); color: oklch(0.85 0.08 215); }
+.status-in_review .d { background: var(--sky); animation: pillPulse 1.8s ease-in-out infinite; }
+.status-changes_requested { background: oklch(0.78 0.17 65 / 0.18); color: oklch(0.87 0.1 65); }
+.status-changes_requested .d { background: var(--amber); }
+.status-approved { background: oklch(0.72 0.15 165 / 0.18); color: oklch(0.87 0.09 165); }
+.status-approved .d { background: var(--teal); }
+.status-scheduled { background: oklch(0.56 0.21 258 / 0.18); color: oklch(0.86 0.1 258); }
+.status-scheduled .d { background: var(--blue); }
+.status-published { background: oklch(0.75 0.15 190 / 0.18); color: oklch(0.87 0.08 190); }
+.status-published .d { background: oklch(0.75 0.15 190); }
+
+/* ---- Grano sutil (login) ---- */
+.grain { position: absolute; inset: 0; opacity: 0.05; mix-blend-mode: overlay; pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 3px 3px; }

@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { createClientUser, deleteClientUser, type ClientUserFormState } from "./actions";
 
 const initialState: ClientUserFormState = { error: null };
+const inputCls = "flex-1 rounded-[11px] border bg-black/20 px-3 py-2 text-sm outline-none focus:border-[var(--sky)]";
 
 export function ClientAccess({
   clientId,
@@ -26,24 +27,22 @@ export function ClientAccess({
     <section className="mb-8">
       <button
         onClick={() => setOpen(!open)}
-        className="mb-3 text-sm font-semibold uppercase tracking-wide text-black/50 dark:text-white/50"
+        className="mb-3 text-xs font-bold tracking-wide uppercase"
+        style={{ color: "var(--text-faint)" }}
       >
         Acceso del cliente {open ? "▾" : "▸"}
       </button>
       {open && (
         <div className="flex flex-col gap-3">
           {users.length > 0 && (
-            <ul className="flex flex-col gap-1">
+            <ul className="flex flex-col gap-1.5">
               {users.map((u) => (
-                <li
-                  key={u.id}
-                  className="flex items-center justify-between rounded border border-black/10 px-3 py-2 text-sm dark:border-white/10"
-                >
+                <li key={u.id} className="surface flex items-center justify-between rounded-[12px] px-3.5 py-2.5 text-sm">
                   <span>{u.email}</span>
                   <form action={deleteClientUser}>
                     <input type="hidden" name="id" value={u.id} />
                     <input type="hidden" name="slug" value={slug} />
-                    <button type="submit" className="text-black/60 dark:text-white/60">
+                    <button type="submit" style={{ color: "var(--text-dim)" }}>
                       Borrar
                     </button>
                   </form>
@@ -52,7 +51,7 @@ export function ClientAccess({
             </ul>
           )}
           {users.length === 0 && (
-            <p className="text-sm text-black/60 dark:text-white/60">
+            <p className="text-sm" style={{ color: "var(--text-dim)" }}>
               Este cliente todavía no tiene login — creá uno para que pueda ver su
               calendario en /c/{slug}.
             </p>
@@ -66,7 +65,8 @@ export function ClientAccess({
               type="email"
               placeholder="email del cliente"
               required
-              className="flex-1 rounded border border-black/20 px-3 py-2 text-sm dark:border-white/20"
+              className={inputCls}
+              style={{ borderColor: "var(--border)" }}
             />
             <input
               name="password"
@@ -74,17 +74,14 @@ export function ClientAccess({
               placeholder="contraseña (mín. 8 caracteres)"
               required
               minLength={8}
-              className="flex-1 rounded border border-black/20 px-3 py-2 text-sm dark:border-white/20"
+              className={inputCls}
+              style={{ borderColor: "var(--border)" }}
             />
-            <button
-              type="submit"
-              disabled={pending}
-              className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
-            >
+            <button type="submit" disabled={pending} className="btn-grad">
               {pending ? "Creando..." : "Crear acceso"}
             </button>
           </form>
-          {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+          {state.error && <p className="text-sm text-red-400">{state.error}</p>}
         </div>
       )}
     </section>

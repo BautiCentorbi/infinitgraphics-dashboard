@@ -20,13 +20,17 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex w-56 shrink-0 flex-col gap-2 rounded border border-black/10 p-2 dark:border-white/10 ${
-        isOver ? "bg-black/5 dark:bg-white/10" : ""
-      }`}
+      className="flex w-56 shrink-0 flex-col gap-2 rounded-[13px] border p-2.5 transition-colors"
+      style={{ borderColor: "var(--border)", background: isOver ? "var(--surface-2)" : "transparent" }}
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
-        {STATUS_LABELS[status]} ({pieces.length})
-      </p>
+      <div className="flex items-center justify-between px-0.5 pb-0.5">
+        <span className="text-[12px] font-bold tracking-wide uppercase" style={{ color: "var(--text-dim)" }}>
+          {STATUS_LABELS[status]}
+        </span>
+        <span className="rounded-full px-1.5 py-0.5 text-[11px]" style={{ background: "var(--surface)", color: "var(--text-faint)" }}>
+          {pieces.length}
+        </span>
+      </div>
       <div className="flex flex-col gap-2">
         {pieces.map((p) => (
           <PieceCard key={p.id} piece={p} onClick={() => onPieceClick(p)} />

@@ -4,6 +4,7 @@ import { useActionState, useRef } from "react";
 import { createTask, type TaskFormState } from "./actions";
 
 const initialState: TaskFormState = { error: null };
+const inputCls = "rounded-[11px] border bg-black/20 px-3 py-2 text-sm outline-none focus:border-[var(--sky)]";
 
 export function NewTaskForm({ clientId, slug }: { clientId: string; slug: string }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -22,22 +23,15 @@ export function NewTaskForm({ clientId, slug }: { clientId: string; slug: string
           name="title"
           placeholder="Nueva tarea"
           required
-          className="flex-1 rounded border border-black/20 px-3 py-2 text-sm dark:border-white/20"
+          className={`flex-1 ${inputCls}`}
+          style={{ borderColor: "var(--border)" }}
         />
-        <input
-          name="dueDate"
-          type="date"
-          className="rounded border border-black/20 px-3 py-2 text-sm dark:border-white/20"
-        />
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
-        >
+        <input name="dueDate" type="date" className={inputCls} style={{ borderColor: "var(--border)", colorScheme: "dark" }} />
+        <button type="submit" disabled={pending} className="btn-grad">
           {pending ? "..." : "Agregar"}
         </button>
       </div>
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-red-400">{state.error}</p>}
     </form>
   );
 }
