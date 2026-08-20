@@ -1,0 +1,138 @@
+// Prisma schema — cm-suite
+// Ver ARCHITECTURE.md para el detalle de decisiones detrás de este modelo.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  admin
+  client
+}
+
+enum Platform {
+  instagram
+  facebook
+  linkedin
+  tiktok
+  otro
+}
+
+enum ContentStatus {
+  draft
+  in_review
+  changes_requested
+  approved
+  scheduled
+  published
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole
+
+  // Solo se completa para usuarios role = client: a qué cliente pertenece.
+  // Los admin ven todos los clientes, no están atados a uno.
+  client   Client? @relation(fields: [clientId], references: [id])
+  clientId String?
+
+  comments        Comment[]
+  contentPieces   ContentPiece[]  @relation("ContentPieceCreatedBy")
+  approvalEvents  ApprovalEvent[]
+
+  createdAt DateTime @default(now())
+}
+
+model Client {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  users          User[]
+  notes          Note[]
+  tasks          Task[]
+  contentPieces  ContentPiece[]
+
+  createdAt DateTime @default(now())
+}
+
+// Workspace mínimo tipo Notion (MVP: texto simple, sin editor de bloques).
+model Note {
+  id       String @id @default(cuid())
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  title String
+  body  String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id       String @id @default(cuid())
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  title   String
+  done    Boolean   @default(false)
+  dueDate DateTime?
+
+  createdAt DateTime @default(now())
+}
+
+// Una pieza del calendario editorial.
+model ContentPiece {
+  id       String @id @default(cuid())
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  platform      Platform
+  scheduledDate DateTime
+  title         String
+  copy          String        @db.Text
+  mediaUrl      String?
+  status        ContentStatus @default(draft)
+
+  createdBy   User   @relation("ContentPieceCreatedBy", fields: [createdById], references: [id])
+  createdById String
+
+  comments       Comment[]
+  approvalEvents ApprovalEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comment {
+  id             String       @id @default(cuid())
+  contentPiece   ContentPiece @relation(fields: [contentPieceId], references: [id], onDelete: Cascade)
+  contentPieceId String
+
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+
+  body String @db.Text
+
+  createdAt DateTime @default(now())
+}
+
+// Historial de cambios de status — auditoría de quién aprobó/pidió cambios y cuándo.
+model ApprovalEvent {
+  id             String       @id @default(cuid())
+  contentPiece   ContentPiece @relation(fields: [contentPieceId], references: [id], onDelete: Cascade)
+  contentPieceId String
+
+  status        ContentStatus
+  changedBy     User          @relation(fields: [changedById], references: [id])
+  changedById   String
+
+  createdAt DateTime @default(now())
+}
