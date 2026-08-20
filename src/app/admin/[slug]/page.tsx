@@ -27,7 +27,15 @@ export default async function ClientWorkspacePage({
       <Link href="/admin" className="text-sm text-black/60 hover:underline dark:text-white/60">
         ← Clientes
       </Link>
-      <h1 className="mt-2 mb-6 text-lg font-semibold">{client.name}</h1>
+      <div className="mt-2 mb-6 flex items-center justify-between">
+        <h1 className="text-lg font-semibold">{client.name}</h1>
+        <Link
+          href={`/admin/${client.slug}/calendar`}
+          className="rounded bg-black px-4 py-2 text-sm text-white dark:bg-white dark:text-black"
+        >
+          Calendario de contenido →
+        </Link>
+      </div>
 
       <section className="mb-8">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
@@ -61,9 +69,6 @@ export default async function ClientWorkspacePage({
         )}
       </section>
 
-      <p className="mt-8 text-xs text-black/40 dark:text-white/40">
-        Calendario de contenido: próximo paso (ver ARCHITECTURE.md).
-      </p>
     </div>
   );
 }

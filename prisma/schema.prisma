@@ -59,8 +59,25 @@ model Client {
   notes          Note[]
   tasks          Task[]
   contentPieces  ContentPiece[]
+  topics         Topic[]
 
   createdAt DateTime @default(now())
+}
+
+// Categorías de tema, definidas por cliente (ej. "Producto", "Institucional",
+// "Promo") — dropdown fijo en vez de texto libre, a pedido de Bautista.
+model Topic {
+  id       String @id @default(cuid())
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  name String
+
+  contentPieces ContentPiece[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([clientId, name])
 }
 
 // Workspace mínimo tipo Notion (MVP: texto simple, sin editor de bloques).
@@ -98,8 +115,12 @@ model ContentPiece {
   scheduledDate DateTime
   title         String
   copy          String        @db.Text
+  hashtags      String?
   mediaUrl      String?
   status        ContentStatus @default(draft)
+
+  topic   Topic?  @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  topicId String?
 
   createdBy   User   @relation("ContentPieceCreatedBy", fields: [createdById], references: [id])
   createdById String
