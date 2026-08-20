@@ -186,6 +186,38 @@ construcción"): analytics multi-plataforma vía Windsor.ai** — recién ahora
 que el workspace/calendario/feedback están andando tiene sentido arrancarlo,
 según el orden que se acordó al principio del proyecto.
 
+## Identidad visual (definida 2026-08-21)
+
+Antes de esto la app era Tailwind minimalista blanco/negro genérico. Se
+diseñó una identidad propia primero en Claude Design (prototipo clickeable:
+login, dashboard de clientes, calendario con sus 3 vistas) y se llevó 1:1 al
+código.
+
+- **Paleta:** dark-first, celeste + azul como familia fría (`--sky`,
+  `--blue`), ámbar como contraste cálido opuesto (`--amber`), teal para
+  "aprobado". Definida en oklch en `src/app/globals.css`. Iteración: primera
+  versión fue violeta/magenta/naranja, Bautista pidió cambiar a
+  celestes/azules con un contraste opuesto — no volver a esa paleta vieja.
+- **Tipografía:** Bricolage Grotesque (display/títulos) + Plus Jakarta Sans
+  (body), vía `next/font/google` en `layout.tsx` — reemplazó Geist.
+- **Sistema de componentes reutilizable** en `globals.css`: `.btn-grad`
+  (botón con gradiente animado), `.surface`/`.surface-hover` (cards),
+  `.status-pill` + `.status-{draft,in_review,changes_requested,approved,
+  scheduled,published}` (badges de estado de `ContentPiece`), `.tabs`/`.tab`/
+  `.tab-indicator` (tabs con indicador deslizante, ver `CalendarApp.tsx`),
+  `.bg-blobs`/`.grain` (fondo animado del login), `.card-anim` (entrada
+  escalonada de cards). `src/lib/content.ts` expone `STATUS_CLASS` para
+  mapear `ContentStatus` → la clase `.status-*` correspondiente (reemplazó
+  un `STATUS_COLORS` viejo de clases Tailwind sueltas — no reintroducirlo).
+- **`AdminNav`** (`src/components/AdminNav.tsx`): navbar compartida entre
+  `/admin`, `/admin/[slug]` y `/admin/[slug]/calendar`.
+- Aplicado a las 5 pantallas reales, no solo al lado admin — incluye
+  `/c/[slug]` (vista de cliente) para que la experiencia sea consistente de
+  punta a punta.
+- El diseño original (con la paleta actualizada) sigue publicado como
+  artifact de Claude Design — sirve de referencia visual si hay que diseñar
+  pantallas nuevas (analytics) en la misma identidad.
+
 ### Pendiente operativo (no bloquea seguir developeando)
 
 - Conectar GitHub↔Vercel para auto-deploy (Bautista lo hace desde la web).
