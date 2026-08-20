@@ -87,24 +87,46 @@ rutas, orden de implementación). Resumen:
 
 ## Estado actual (2026-08-20)
 
-Scaffold del paso 1 (ver ARCHITECTURE.md, "Orden de implementación") ya está
-hecho y commiteado localmente (git, sin remoto todavía):
+Paso 1 del orden de implementación (ver ARCHITECTURE.md) **completo y en
+producción**:
 
-- Next.js + TypeScript + Tailwind + Prisma (schema completo del MVP) +
-  NextAuth (login admin/client, rutas protegidas) — build pasa limpio.
-- **Falta antes de poder correr la app de verdad:**
-  1. Crear la base de datos Neon (Vercel → Storage → Create Database → Neon
-     Postgres, o `npx create-db`) y pegar la connection string real en
-     `DATABASE_URL` dentro de `.env` (hoy tiene el placeholder de
-     create-next-app).
-  2. Completar `ADMIN_PASSWORD` en `.env` (el email admin ya está puesto:
-     `bcentorbi.designer@gmail.com`).
-  3. Correr `npx prisma migrate dev --name init` para crear las tablas.
-  4. Correr `npm run db:seed` para crear el usuario admin.
-  5. `npm run dev` y entrar a `/login`.
-- Sin remoto de GitHub/Vercel todavía — el repo es local por ahora.
+- **Repo:** https://github.com/BautiCentorbi/infinitgraphics-dashboard
+  (nombre del repo tiene un typo histórico — falta la "e" de "infinite" — no
+  tocar, ya está todo apuntando ahí).
+- **Vercel:** proyecto `infinite-graphics/cm-suite`. **Ojo con el nombre:**
+  este equipo (`infinite-graphics`) también tiene el proyecto viejo
+  `infinitegraphics-dashboard` (el dashboard de CDS, de `cds-script` — no
+  confundir, son cosas separadas).
+  - URL producción: **https://cm-suite-delta.vercel.app**
+  - Deploy hoy hecho a mano por CLI (`vercel --prod`). El auto-deploy en cada
+    push todavía no está conectado — falta que Bautista apruebe el "Login
+    Connection" con GitHub en Vercel (Settings → Git del proyecto) para que
+    el import automático funcione. Hasta que eso esté, cualquier cambio que
+    se quiera ver en producción hay que redeployarlo a mano con
+    `npx vercel --prod`.
+- **Base de datos:** Neon, provisionada vía `vercel integration add neon` y
+  conectada automáticamente al proyecto `cm-suite` (esto carga solo un
+  montón de env vars `POSTGRES_*`/`PG*`/`DATABASE_URL*` en Vercel). Migración
+  inicial corrida (`prisma migrate dev --name init`) y usuario admin creado
+  (`prisma/seed.ts`, email `bcentorbi.designer@gmail.com`, password guardada
+  por Bautista fuera de este archivo — no está escrita acá).
+- **Env vars ya cargadas en Vercel (Production):** `DATABASE_URL` (via Neon,
+  automático), `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (estas 3
+  cargadas a mano por CLI). `.env` local (gitignored) tiene los mismos
+  valores para desarrollo.
+- **Flujo de trabajo acordado:** antes de pushear cualquier cambio, probarlo
+  en local primero (`npm run dev`, contra la misma DB de Neon — no hay DB de
+  desarrollo separada todavía). Recién cuando funciona ahí se commitea/pushea.
+- Login probado de punta a punta (local y producción): auth contra Neon
+  funciona, `/admin` protegido carga bien.
 - Próximo paso de producto (paso 2 del orden de implementación): CRUD de
   clientes desde `/admin`.
+
+### Pendiente operativo (no bloquea seguir developeando)
+
+- Conectar GitHub↔Vercel para auto-deploy (Bautista lo hace desde la web).
+- Decidir si vale la pena separar una DB de desarrollo distinta de la de
+  producción en Neon (hoy comparten la misma) — no urgente a esta escala.
 
 ## Pendiente de definir (no bloqueante, ver detalle en ARCHITECTURE.md)
 
