@@ -3,7 +3,7 @@
 import { PLATFORM_LABELS, PLATFORMS, STATUS_LABELS, STATUSES } from "@/lib/content";
 import type { TopicOption } from "./types";
 
-const selectCls = "surface rounded-[10px] px-3 py-2 text-[12.5px] font-semibold outline-none";
+const selectCls = "surface surface-hover select-field rounded-[10px] px-3 py-2 text-[12.5px] font-semibold outline-none";
 
 // Filtros por propiedades (plataforma/estado/tema) — compartidos entre las
 // 3 vistas del calendario, no solo la Lista (a pedido de Bautista).

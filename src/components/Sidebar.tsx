@@ -152,12 +152,11 @@ export function Sidebar({ clients }: { clients: ClientLite[] }) {
           onClick={togglePin}
           aria-label={pinned ? "Desfijar menú" : "Fijar menú abierto"}
           title={pinned ? "Desfijar menú" : "Fijar menú abierto"}
-          className="flex h-9 w-full items-center gap-2.5 rounded-[12px] px-2.5 text-xs font-bold transition-colors"
-          style={
+          className={`flex h-9 w-full items-center gap-2.5 rounded-[12px] border px-2.5 text-xs font-bold transition-colors ${
             pinned
-              ? { background: "oklch(0.72 0.15 215 / 0.16)", color: "var(--sky)", border: "1px solid oklch(0.72 0.15 215 / 0.4)" }
-              : { background: "var(--surface-2)", color: "var(--text-dim)", border: "1px solid var(--border)" }
-          }
+              ? "border-[oklch(0.72_0.15_215_/_0.4)] bg-[oklch(0.72_0.15_215_/_0.16)] text-[var(--sky)]"
+              : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-dim-plain)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
+          }`}
         >
           <svg
             viewBox="0 0 24 24"
@@ -183,10 +182,17 @@ export function Sidebar({ clients }: { clients: ClientLite[] }) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex items-center gap-2.5 rounded-[10px] px-2 py-2 text-sm font-semibold transition-colors"
-                  style={active ? { background: "var(--surface-2)", color: "var(--text)" } : { color: "var(--text-dim)" }}
+                  className={`group flex items-center gap-2.5 rounded-[10px] px-2 py-2 text-sm font-semibold transition-colors ${
+                    active
+                      ? "bg-[var(--surface-2)] text-[var(--sky)]"
+                      : "text-[var(--text)] hover:bg-[var(--surface-2)]"
+                  }`}
                 >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center" style={{ color: active ? "var(--sky)" : "var(--text-faint)" }}>
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center transition-colors ${
+                      active ? "text-[var(--sky)]" : "text-[var(--text-faint-plain)] group-hover:text-[var(--text-dim-plain)]"
+                    }`}
+                  >
                     {item.icon}
                   </span>
                   {open && <span className="truncate whitespace-nowrap">{item.label}</span>}
@@ -202,7 +208,7 @@ export function Sidebar({ clients }: { clients: ClientLite[] }) {
       {/* Clientes (lista expandida, solo tiene sentido en esa sección) */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-2.5 pb-3">
         {open && onClientsSection && (
-          <p className="mb-2 px-2 text-[10.5px] font-bold tracking-wide uppercase" style={{ color: "var(--text-faint)" }}>
+          <p className="mb-2 px-2 text-[10.5px] font-bold tracking-wide uppercase" style={{ color: "var(--text-faint-plain)" }}>
             Tus clientes
           </p>
         )}
@@ -213,8 +219,11 @@ export function Sidebar({ clients }: { clients: ClientLite[] }) {
               <li key={client.id}>
                 <Link
                   href={`/admin/${client.slug}`}
-                  className="flex items-center gap-2.5 rounded-[10px] px-1.5 py-1.5 text-sm font-semibold transition-colors"
-                  style={isActiveClient ? { background: "var(--surface-2)", color: "var(--text)" } : { color: "var(--text-dim)" }}
+                  className={`flex items-center gap-2.5 rounded-[10px] px-1.5 py-1.5 text-sm font-semibold transition-colors ${
+                    isActiveClient
+                      ? "bg-[var(--surface-2)] text-[var(--text)]"
+                      : "text-[var(--text-dim-plain)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+                  }`}
                 >
                   <span
                     className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-[8px] text-[11px] font-bold text-white"
@@ -241,8 +250,9 @@ export function Sidebar({ clients }: { clients: ClientLite[] }) {
                         <li key={s.label}>
                           <Link
                             href={`/admin/${client.slug}${s.hash ? `#${s.hash}` : ""}`}
-                            className="block rounded-[8px] px-2 py-1 text-xs transition-colors hover:text-[var(--text)]"
-                            style={{ color: isActive ? "var(--sky)" : "var(--text-faint)" }}
+                            className={`block rounded-[8px] px-2 py-1 text-xs transition-colors ${
+                              isActive ? "text-[var(--sky)]" : "text-[var(--text)] hover:text-[var(--sky)]"
+                            }`}
                           >
                             {s.label}
                           </Link>
@@ -252,8 +262,9 @@ export function Sidebar({ clients }: { clients: ClientLite[] }) {
                     <li>
                       <Link
                         href={`/admin/${client.slug}/calendar`}
-                        className="block rounded-[8px] px-2 py-1 text-xs transition-colors hover:text-[var(--text)]"
-                        style={{ color: onCalendar ? "var(--sky)" : "var(--text-faint)" }}
+                        className={`block rounded-[8px] px-2 py-1 text-xs transition-colors ${
+                          onCalendar ? "text-[var(--sky)]" : "text-[var(--text)] hover:text-[var(--sky)]"
+                        }`}
                       >
                         Calendario
                       </Link>
@@ -268,12 +279,12 @@ export function Sidebar({ clients }: { clients: ClientLite[] }) {
 
       {/* Usuario / salir */}
       <div className="shrink-0 border-t p-2.5" style={{ borderColor: "var(--border)" }}>
-        <form action={signOutAction} className="flex items-center gap-2.5 rounded-[10px] px-1 py-1.5">
+        <form action={signOutAction} className="flex items-center gap-2.5 rounded-[10px] px-1 py-1.5 transition-colors hover:bg-[var(--surface-2)]">
           <div className="avatar-ring h-7 w-7 shrink-0">
             <div className="inner h-full w-full text-[10.5px]">BC</div>
           </div>
           {open && (
-            <button type="submit" className="text-xs font-semibold whitespace-nowrap" style={{ color: "var(--text-dim)" }}>
+            <button type="submit" className="text-xs font-semibold whitespace-nowrap text-[var(--text-dim-plain)] transition-colors hover:text-[var(--text)]">
               Salir
             </button>
           )}

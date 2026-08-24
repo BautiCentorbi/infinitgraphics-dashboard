@@ -25,7 +25,7 @@ export function PriorityPicker({ value, onChange }: { value: TaskPriority; onCha
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        className="flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors"
+        className="dd-trigger flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors"
         style={{ background: "var(--surface-2)", color: PRIORITY_COLOR[value] }}
       >
         <span className="h-1.5 w-1.5 rounded-full" style={{ background: PRIORITY_COLOR[value] }} />

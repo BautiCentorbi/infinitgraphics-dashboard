@@ -15,6 +15,15 @@ export type DocumentItem = {
   createdAt: string; // ISO
 };
 
+const MAX_DOCUMENT_BYTES = 2 * 1024 * 1024; // 2MB
+const ALLOWED_DOCUMENT_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+];
+const ACCEPT_DOCUMENT = ".pdf,.docx,.pptx,.xlsx";
+
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -57,6 +66,8 @@ export function DocumentsSection({
 
     if (!title) return setError("El título es obligatorio.");
     if (!file || file.size === 0) return setError("Elegí un archivo.");
+    if (!ALLOWED_DOCUMENT_TYPES.includes(file.type)) return setError("Solo se aceptan archivos .pdf, .docx, .pptx o .xlsx.");
+    if (file.size > MAX_DOCUMENT_BYTES) return setError("El archivo supera el máximo permitido (2MB).");
 
     setUploading(true);
     try {
@@ -106,7 +117,7 @@ export function DocumentsSection({
         <h2 className="text-xs font-bold tracking-wide uppercase" style={{ color: "var(--text-faint)" }}>
           Documentación
         </h2>
-        <button onClick={() => setOpen(!open)} className="text-xs font-semibold" style={{ color: "var(--sky)" }}>
+        <button onClick={() => setOpen(!open)} className="link-accent text-xs">
           {open ? "Cancelar" : "+ Subir"}
         </button>
       </div>
@@ -129,10 +140,14 @@ export function DocumentsSection({
           <input
             name="file"
             type="file"
+            accept={ACCEPT_DOCUMENT}
             required
             className="w-full min-w-0 max-w-full text-xs file:mr-3 file:cursor-pointer file:rounded-[8px] file:border-0 file:bg-[var(--surface-2)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[var(--text)]"
             style={{ color: "var(--text-dim)" }}
           />
+          <p className="text-[11px]" style={{ color: "var(--text-faint)" }}>
+            PDF, Word, PowerPoint o Excel · máximo 2MB
+          </p>
           <button type="submit" disabled={uploading} className="btn-grad self-start">
             {uploading ? "Subiendo..." : "Subir documento"}
           </button>

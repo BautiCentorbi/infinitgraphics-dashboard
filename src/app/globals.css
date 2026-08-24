@@ -3,10 +3,14 @@
 /* ============================================================
    Identidad visual — cm-suite
    Definida en el diseño de Claude Design (2026-08-21), llevada acá
-   1:1. Paleta: celeste + azul (fríos, familia) con ámbar como
-   contraste cálido opuesto. Dark-first — es la app de trabajo diario
-   del CM, no una landing pública.
-   Ver ARCHITECTURE.md, sección "Identidad visual".
+   1:1. Dark-first — es la app de trabajo diario del CM, no una
+   landing pública.
+
+   2026-08-24: paleta de acento y animaciones de botones realineadas
+   a bcentorbi.com (mismo azul de marca, look pill + hover de
+   elevación/opacidad en vez del gradiente animado anterior). Sigue
+   dark-first — eso no cambió, solo el acento y la interacción de los
+   botones. Ver ARCHITECTURE.md, sección "Identidad visual".
    ============================================================ */
 
 :root {
@@ -19,14 +23,38 @@
   --text: oklch(0.97 0.006 275);
   --text-dim: oklch(0.75 0.02 275);
   --text-faint: oklch(0.55 0.02 275);
+  /* Grises 100% neutros (hue 0, sin tinte) — --text-dim/--text-faint
+     llevan hue 275 (frío, del lado azul-violeta) heredado de la paleta
+     original de toda la app; con poca luminosidad en dark mode ese hue
+     se percibe como un tinte azulado aunque la saturación sea baja.
+     Estos se usan donde el texto "no seleccionado" tiene que leerse
+     100% gris/blanco, sin ninguna asociación a "azul" — p. ej. el menú
+     lateral, donde lo único que debe verse azul es lo activo/hover. */
+  --text-dim-plain: oklch(0.75 0 0);
+  --text-faint-plain: oklch(0.55 0 0);
 
-  --sky: oklch(0.72 0.15 215);
-  --blue: oklch(0.56 0.21 258);
-  --amber: oklch(0.78 0.17 65);
-  --teal: oklch(0.72 0.15 165);
+  /* Azul de marca — mismos tonos que bcentorbi.com (blue-500/600).
+     2026-08-24: se probó retirar el azul de toda la app y reemplazarlo
+     por --accent (ámbar), pero Bautista decidió volver al azul acá —
+     el ámbar queda **solo** en el relleno de los botones
+     (.btn-grad/.btn-ghost, ver --accent más abajo), todo lo demás
+     (gradiente de marca, avatares, blobs del login, bordes de foco,
+     hashtags, dots de estado, sidebar) vuelve a azul. */
+  --sky: #3080ff;
+  --blue: #155dfc;
+  --amber: oklch(0.78 0.13 65);
+  --teal: oklch(0.72 0.12 195);
 
-  --grad: linear-gradient(135deg, var(--sky), var(--blue) 55%, var(--amber));
-  --grad-shadow: oklch(0.5 0.18 236 / 0.55);
+  /* Relleno del swipe de los botones — el único lugar de la app que
+     queda en ámbar (ver nota arriba). Más oscuro/saturado que --amber
+     (reservado para el badge de estado "changes_requested") para que el
+     texto blanco del botón se siga leyendo encima. */
+  --accent: oklch(0.64 0.19 48);
+  --accent-shadow: oklch(0.3 0.15 48 / 0.5);
+
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  --grad: linear-gradient(135deg, var(--sky), var(--blue));
+  --grad-shadow: oklch(0.45 0.2 258 / 0.45);
 }
 
 @theme inline {
@@ -34,20 +62,63 @@
   --color-foreground: var(--text);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
+
+  /* text-sm/text-base (el "md" que no tiene nombre propio en Tailwind)
+     son los tamaños más usados en la UI (labels, botones, texto de
+     tablas) y son justo donde más se nota que Darker Grotesque rinde
+     chica — el ajuste de --font-size raíz (más abajo, html{font-size})
+     ya sube todo parejo, pero estos dos quedan un poco más arriba
+     todavía porque son los que Bautista señaló puntualmente. No tocar
+     --text-xs (labels chicos/badges) sin que lo pida explícitamente. */
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.375rem;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.625rem;
 }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body), system-ui, sans-serif;
+/* @layer base: estilos por default de elementos HTML puros (html, body,
+   h1-h3, a). Van en @layer base — no sueltos — para que cualquier clase
+   de Tailwind (incluidas las arbitrarias, text-[var(--text)] etc.) los
+   pueda pisar normalmente en cualquier componente. Una regla de elemento
+   escrita SUELTA (sin @layer) en este archivo queda "sin capa" y le gana
+   a CUALQUIER clase de Tailwind sin importar especificidad — así se
+   rompieron los estados hover/activo del nav del sidebar (todos los
+   <Link> son <a>, así que un `a{color}` suelto los forzaba a azul
+   siempre, pasara lo que pasara en su className). No volver a agregar
+   reglas de elemento (a, button, input, h1..) sueltas en este archivo —
+   siempre dentro de este @layer base. */
+@layer base {
+  /* Darker Grotesque renderiza visiblemente más chica que una fuente
+     estándar al mismo tamaño nominal — se sube el font-size raíz un poco
+     para que todo el texto en rem (la mayoría de las clases de Tailwind)
+     escale parejo en toda la app, sin tocar clase por clase. */
+  html { font-size: 107.5%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body), system-ui, sans-serif;
+    /* Darker Grotesque es una tipografía angosta/liviana por diseño —
+       subir el peso base mantiene la legibilidad en UI densa (tablas,
+       formularios) sin perder el carácter de la fuente. */
+    font-weight: 500;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display), system-ui, sans-serif;
+    font-weight: 700;
+  }
+
+  a { color: var(--sky); text-decoration: none; transition: color .2s var(--ease); }
+  a:hover { color: var(--blue); }
 }
 
-h1, h2, h3, .font-display {
-  font-family: var(--font-display), system-ui, sans-serif;
-}
-
-a { color: var(--sky); text-decoration: none; }
-a:hover { color: var(--blue); }
+/* @layer components: todas las clases reutilizables de la app (botones,
+   superficies, tabs, status-pills, etc.) — mismo motivo que el @layer
+   base de arriba: para que una clase de Tailwind en el className de un
+   componente (ej. un `hover:bg-[...]` puntual) pueda pisar a una de
+   estas si hace falta, en vez de perder siempre por estar "sin capa". */
+@layer components {
 
 /* ---- Fondo con blobs animados (login / pantallas de entrada) ---- */
 .bg-blobs { position: relative; overflow: hidden; }
@@ -73,26 +144,85 @@ a:hover { color: var(--blue); }
     var(--bg);
 }
 
-/* ---- Botón primario con gradiente de marca ---- */
+/* ---- Botón primario ----
+   Blanco por default; al hover se llena de ámbar profundo (--accent)
+   con un swipe de abajo hacia arriba (::before que entra en
+   translateY) y el texto pasa a blanco — mismo mecanismo que bcentorbi
+   (inversión de contraste + swipe), con el acento propio de cm-suite
+   en vez de su azul (ver --accent más arriba). */
 .btn-grad {
+  position: relative; isolation: isolate; overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  border: none; border-radius: 12px; padding: 11px 18px;
-  background: var(--grad); background-size: 160% 160%; background-position: 0% 50%;
-  color: white; font-weight: 700; font-size: 14px; cursor: pointer;
-  box-shadow: 0 10px 28px -8px var(--grad-shadow);
-  transition: transform .15s ease, box-shadow .2s ease, background-position .5s ease;
+  border: none; border-radius: 999px; padding: 11px 20px;
+  background: var(--text);
+  color: var(--bg); font-weight: 700; font-size: 15px; cursor: pointer;
+  box-shadow: 0 6px 20px -10px oklch(0 0 0 / 0.5);
+  transition: color .3s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease), opacity .2s var(--ease);
 }
-.btn-grad:hover { background-position: 100% 50%; box-shadow: 0 14px 34px -6px var(--grad-shadow); transform: translateY(-2px); }
-.btn-grad:active { transform: translateY(0) scale(0.97); }
-.btn-grad:disabled { cursor: default; opacity: 0.7; transform: none; }
+.btn-grad::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: var(--accent); transform: translateY(101%);
+  transition: transform .35s var(--ease);
+}
+.btn-grad:hover { color: white; transform: translateY(-2px); box-shadow: 0 10px 26px -8px var(--accent-shadow); }
+.btn-grad:hover::before { transform: translateY(0); }
+.btn-grad:active { transform: translateY(0) scale(0.98); }
+.btn-grad:disabled { cursor: default; opacity: 0.6; transform: none; box-shadow: none; }
+.btn-grad:disabled::before { transform: translateY(101%); }
+
+/* ---- Botón secundario / ghost — mismo swipe, sin relleno de base ---- */
+.btn-ghost {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid var(--border-strong); border-radius: 999px; padding: 10px 18px;
+  background: transparent;
+  color: var(--text); font-weight: 700; font-size: 15px; cursor: pointer;
+  transition: color .3s var(--ease), border-color .2s var(--ease), transform .2s var(--ease), opacity .2s var(--ease);
+}
+.btn-ghost::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: var(--accent); transform: translateY(101%);
+  transition: transform .35s var(--ease);
+}
+.btn-ghost:hover { color: white; border-color: var(--accent); transform: translateY(-2px); }
+.btn-ghost:hover::before { transform: translateY(0); }
+.btn-ghost:active { transform: translateY(0) scale(0.98); }
+.btn-ghost:disabled { cursor: default; opacity: 0.6; transform: none; }
+.btn-ghost:disabled::before { transform: translateY(101%); }
 
 /* ---- Superficies ---- */
-.surface { background: var(--surface); border: 1px solid var(--border); }
+.surface { background: var(--surface); border: 1px solid var(--border); transition: border-color .2s var(--ease), background-color .2s var(--ease); }
 .surface-hover:hover { border-color: var(--border-strong); background: var(--surface-2); }
 
+/* ---- Links secundarios con acento (Subir, Editar, Ver calendario…) ----
+   Antes eran texto de color sin ningún estado de hover. Hover sutil por
+   opacidad — a propósito distinto del swipe de `.btn-grad`/`.btn-ghost`,
+   que queda reservado para las acciones primarias. */
+.link-accent {
+  color: var(--sky);
+  font-weight: 700;
+  transition: color .2s var(--ease), opacity .2s var(--ease);
+}
+.link-accent:hover { color: var(--blue); opacity: .85; }
+
+/* ---- Disparador de menú desplegable (Prioridad, Estado…) — mismo hover
+   sutil que .link-accent, sin swipe. Se combina con la clase que ya trae
+   cada uno (.status-pill, etc.), no la reemplaza. ---- */
+.dd-trigger { transition: filter .2s var(--ease), transform .2s var(--ease); }
+.dd-trigger:hover { filter: brightness(1.18); transform: translateY(-1px); }
+
+/* ---- <select> nativos — misma estética que el resto de los desplegables:
+   hover de superficie + foco en el acento. ---- */
+.select-field {
+  cursor: pointer;
+  transition: border-color .2s var(--ease), background-color .2s var(--ease);
+}
+.select-field:hover { border-color: var(--border-strong); }
+.select-field:focus { border-color: var(--sky); outline: none; }
+
 .card-anim {
-  animation: cardIn .5s cubic-bezier(.2,.8,.2,1) both;
-  transition: transform .22s ease, border-color .22s ease, background .22s ease;
+  animation: cardIn .5s var(--ease) both;
+  transition: transform .22s var(--ease), border-color .22s var(--ease), background .22s var(--ease);
 }
 @keyframes cardIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -106,17 +236,22 @@ a:hover { color: var(--blue); }
 
 /* ---- Tabs con indicador deslizante ---- */
 .tabs { position: relative; display: inline-flex; padding: 4px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); gap: 2px; }
-.tab { position: relative; z-index: 2; padding: 8px 18px; border-radius: 9px; font-size: 13.5px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: color .2s ease; }
+.tab { position: relative; z-index: 2; padding: 8px 18px; border-radius: 9px; font-size: 14.5px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: color .2s var(--ease); }
 .tab[data-active="true"] { color: white; }
 .tab-indicator {
   position: absolute; top: 4px; bottom: 4px; border-radius: 9px; background: var(--grad);
-  transition: transform .32s cubic-bezier(.2,.8,.2,1), width .32s cubic-bezier(.2,.8,.2,1);
+  transition: transform .32s var(--ease), width .32s var(--ease);
   z-index: 1; box-shadow: 0 6px 16px -4px var(--grad-shadow);
 }
 
 /* ---- Badges de estado (piezas de calendario) ---- */
-.status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .status-pill .d { width: 5px; height: 5px; border-radius: 50%; }
+/* Cuando el pill es el disparador de un desplegable (StatusPicker), trae
+   también .cursor-pointer — ahí sí necesita hover, a diferencia de los
+   pills de solo lectura que aparecen en las tarjetas/listas. */
+.status-pill.cursor-pointer { transition: filter .2s var(--ease), transform .2s var(--ease); }
+.status-pill.cursor-pointer:hover { filter: brightness(1.15); transform: translateY(-1px); }
 @keyframes pillPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
 .status-draft { background: oklch(1 0 0 / 0.08); color: var(--text-dim); }
@@ -125,7 +260,7 @@ a:hover { color: var(--blue); }
 .status-in_review .d { background: var(--sky); animation: pillPulse 1.8s ease-in-out infinite; }
 .status-changes_requested { background: oklch(0.78 0.17 65 / 0.18); color: oklch(0.87 0.1 65); }
 .status-changes_requested .d { background: var(--amber); }
-.status-approved { background: oklch(0.72 0.15 165 / 0.18); color: oklch(0.87 0.09 165); }
+.status-approved { background: oklch(0.72 0.12 195 / 0.18); color: oklch(0.87 0.08 195); }
 .status-approved .d { background: var(--teal); }
 .status-scheduled { background: oklch(0.56 0.21 258 / 0.18); color: oklch(0.86 0.1 258); }
 .status-scheduled .d { background: var(--blue); }
@@ -135,3 +270,5 @@ a:hover { color: var(--blue); }
 /* ---- Grano sutil (login) ---- */
 .grain { position: absolute; inset: 0; opacity: 0.05; mix-blend-mode: overlay; pointer-events: none;
   background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 3px 3px; }
+
+} /* fin @layer components */
