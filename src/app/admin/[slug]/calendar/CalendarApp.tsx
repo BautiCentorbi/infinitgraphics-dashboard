@@ -12,6 +12,7 @@ import { PiecePreview } from "./PiecePreview";
 import { FilterBar } from "./FilterBar";
 import { CardFieldsMenu, useCardFields } from "./CardFieldsMenu";
 import { TopicManager } from "./TopicManager";
+import { MediaLightbox } from "@/components/MediaLightbox";
 import { reschedulePiece, changePieceStatus } from "./actions";
 import type { ContentStatus } from "@/generated/prisma/enums";
 import type { Piece, TopicOption } from "./types";
@@ -82,6 +83,10 @@ export function CalendarApp({
   // se usa el botón "Editar" del preview al hover, o el click desde la
   // propia Lista.
   const [highlightId, setHighlightId] = useState<string | null>(null);
+
+  // Lightbox del adjunto — independiente del estado del popover de hover,
+  // para que cerrar/mover el mouse del preview no lo tape ni lo cierre.
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   function jumpToList(piece: Piece) {
     setPreview(null);
     setView("list");
@@ -230,10 +235,15 @@ export function CalendarApp({
             anchorRect={preview.rect}
             onEdit={() => openEdit(preview.piece)}
             onChangeStatus={(status) => handleStatusChange(preview.piece.id, status)}
+            onOpenMedia={setLightboxUrl}
             onMouseEnter={cancelHidePreview}
             onMouseLeave={scheduleHidePreview}
           />
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {lightboxUrl && <MediaLightbox src={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
       </AnimatePresence>
 
       <AnimatePresence>

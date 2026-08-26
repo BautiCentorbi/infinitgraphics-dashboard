@@ -4,6 +4,7 @@ import { useRef, type CSSProperties } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { PLATFORM_LABELS, STATUS_CLASS, STATUS_LABELS, FORMAT_LABELS, DEFAULT_CARD_FIELDS, type CardField } from "@/lib/content";
 import { isVideoUrl } from "@/lib/media";
+import { VideoThumbnail } from "@/components/VideoThumbnail";
 import type { Piece } from "./types";
 
 const HOVER_DELAY = 300;
@@ -66,8 +67,7 @@ export function PieceCard({
         {compact && piece.mediaUrl && (
           <span className="h-6 w-6 shrink-0 overflow-hidden rounded-[6px]" style={{ background: "var(--surface-2)" }}>
             {isVideoUrl(piece.mediaUrl) ? (
-              // eslint-disable-next-line jsx-a11y/media-has-caption
-              <video src={piece.mediaUrl} className="h-full w-full object-cover" muted />
+              <VideoThumbnail src={piece.mediaUrl} className="h-full w-full object-cover" />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={piece.mediaUrl} alt="" className="h-full w-full object-cover" />

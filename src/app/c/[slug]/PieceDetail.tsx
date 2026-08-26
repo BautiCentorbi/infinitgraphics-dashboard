@@ -1,8 +1,12 @@
 "use client";
 
-import { useActionState, useRef, useTransition } from "react";
+import { useActionState, useRef, useState, useTransition } from "react";
+import { AnimatePresence } from "motion/react";
 import { addComment, clientApprove, clientRequestChanges, type CommentFormState } from "./actions";
 import { PLATFORM_LABELS, STATUS_CLASS, STATUS_LABELS } from "@/lib/content";
+import { isVideoUrl } from "@/lib/media";
+import { MediaLightbox } from "@/components/MediaLightbox";
+import { VideoThumbnail } from "@/components/VideoThumbnail";
 import type { ClientPiece } from "./types";
 
 const initialState: CommentFormState = { error: null };
@@ -19,6 +23,7 @@ export function PieceDetail({
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [pending, startTransition] = useTransition();
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [state, formAction, commentPending] = useActionState(async (prev: CommentFormState, fd: FormData) => {
     const result = await addComment(prev, fd);
     if (!result.error) formRef.current?.reset();
@@ -57,8 +62,27 @@ export function PieceDetail({
         </span>
 
         {piece.mediaUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={piece.mediaUrl} alt="" className="mt-3.5 max-h-64 w-full rounded-[14px] object-cover" />
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(true)}
+            className="group relative mt-3.5 block w-full overflow-hidden rounded-[14px]"
+            title="Ver en grande"
+          >
+            {isVideoUrl(piece.mediaUrl) ? (
+              <VideoThumbnail src={piece.mediaUrl} className="max-h-96 w-full object-cover" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={piece.mediaUrl} alt="" className="max-h-96 w-full object-cover" />
+            )}
+            <span
+              className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100"
+              style={{ background: "oklch(0 0 0 / 0.35)" }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+              </svg>
+            </span>
+          </button>
         )}
 
         <p className="mt-3.5 text-[13.5px] whitespace-pre-wrap" style={{ color: "var(--text-dim)" }}>{piece.copy}</p>
@@ -122,6 +146,10 @@ export function PieceDetail({
           </form>
         </div>
       </div>
+
+      <AnimatePresence>
+        {lightboxOpen && piece.mediaUrl && <MediaLightbox src={piece.mediaUrl} onClose={() => setLightboxOpen(false)} />}
+      </AnimatePresence>
     </div>
   );
 }

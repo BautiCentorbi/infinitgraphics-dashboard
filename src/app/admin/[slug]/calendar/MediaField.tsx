@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 import { isVideoUrl } from "@/lib/media";
+import { VideoThumbnail } from "@/components/VideoThumbnail";
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2MB
 const MAX_VIDEO_BYTES = 64 * 1024 * 1024; // 64MB
@@ -83,8 +84,7 @@ export function MediaField({ defaultValue }: { defaultValue: string | null }) {
       {value && !uploading && (
         <div className="mt-1 flex items-center gap-2">
           {isVideoUrl(value) ? (
-            // eslint-disable-next-line jsx-a11y/media-has-caption
-            <video src={value} className="h-16 w-16 rounded-[9px] object-cover" muted />
+            <VideoThumbnail src={value} className="h-16 w-16 rounded-[9px] object-cover" />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={value} alt="" className="h-16 w-16 rounded-[9px] object-cover" />
