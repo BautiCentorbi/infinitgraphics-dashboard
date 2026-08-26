@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { NewNoteForm } from "./NewNoteForm";
 import { NoteItem } from "./NoteItem";
 import { NewTaskForm } from "./NewTaskForm";
-import { TaskItem } from "./TaskItem";
+import { TaskBoard } from "./TaskBoard";
 import { ClientAccess } from "./ClientAccess";
 import { DocumentsSection } from "./DocumentsSection";
 import { StatTiles } from "./StatTiles";
@@ -27,7 +27,9 @@ export default async function ClientWorkspacePage({
     prisma.note.findMany({ where: { clientId: client.id }, orderBy: { updatedAt: "desc" } }),
     prisma.task.findMany({
       where: { clientId: client.id },
-      orderBy: [{ done: "asc" }, { priority: "desc" }, { dueDate: "asc" }],
+      // status asc sigue el orden de declaración del enum (pending,
+      // in_progress, done) — pendientes primero, después por prioridad.
+      orderBy: [{ status: "asc" }, { priority: "desc" }, { dueDate: "asc" }],
     }),
     prisma.user.findMany({ where: { clientId: client.id, role: "client" }, select: { id: true, email: true } }),
     prisma.document.findMany({ where: { clientId: client.id }, orderBy: { createdAt: "desc" } }),
@@ -45,7 +47,7 @@ export default async function ClientWorkspacePage({
     }),
   ]);
 
-  const pendingTasks = tasks.filter((t) => !t.done).length;
+  const pendingTasks = tasks.filter((t) => t.status !== "done").length;
 
   return (
     <div className="mx-auto max-w-6xl px-10 py-9">
@@ -87,15 +89,7 @@ export default async function ClientWorkspacePage({
               Tareas
             </h2>
             <NewTaskForm clientId={client.id} slug={client.slug} />
-            {tasks.length === 0 ? (
-              <p className="text-sm" style={{ color: "var(--text-dim)" }}>Sin tareas todavía.</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {tasks.map((task) => (
-                  <TaskItem key={task.id} task={task} slug={client.slug} />
-                ))}
-              </ul>
-            )}
+            <TaskBoard tasks={tasks} slug={client.slug} />
           </section>
         </div>
 

@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { listInstagramAccounts } from "@/lib/windsor";
-import type { TaskPriority, Platform } from "@/generated/prisma/enums";
+import type { TaskPriority, TaskStatus, Platform } from "@/generated/prisma/enums";
 
 export type NoteFormState = { error: string | null };
 
@@ -109,31 +109,29 @@ export async function createTask(
     },
   });
   revalidatePath(`/admin/${slug}`);
+  revalidatePath("/admin/tasks");
   return { error: null };
 }
 
-export async function toggleTask(formData: FormData) {
-  const id = formData.get("id") as string;
-  const slug = formData.get("slug") as string;
-  const done = formData.get("done") === "true";
-  if (!id) return;
-
-  await prisma.task.update({ where: { id }, data: { done: !done } });
+// Cambia el estado de una tarea (kanban de tareas — 3 columnas, ver
+// TaskStatus en el schema) — reemplazó al toggleTask viejo de "done"
+// booleano.
+export async function setTaskStatus(id: string, slug: string, status: TaskStatus) {
+  await prisma.task.update({ where: { id }, data: { status } });
   revalidatePath(`/admin/${slug}`);
+  revalidatePath("/admin/tasks");
 }
 
 export async function setTaskPriority(id: string, slug: string, priority: TaskPriority) {
   await prisma.task.update({ where: { id }, data: { priority } });
   revalidatePath(`/admin/${slug}`);
+  revalidatePath("/admin/tasks");
 }
 
-export async function deleteTask(formData: FormData) {
-  const id = formData.get("id") as string;
-  const slug = formData.get("slug") as string;
-  if (!id) return;
-
+export async function deleteTask(id: string, slug: string) {
   await prisma.task.delete({ where: { id } });
   revalidatePath(`/admin/${slug}`);
+  revalidatePath("/admin/tasks");
 }
 
 // El archivo ya está en Blob cuando esto se llama (subido directo desde el

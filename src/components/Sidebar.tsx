@@ -29,7 +29,7 @@ const TOP_NAV = [
   {
     href: "/admin",
     label: "Clientes",
-    match: (p: string) => p === "/admin" || (p.startsWith("/admin/") && !["metrics", "calendars", "settings"].some((r) => p.startsWith(`/admin/${r}`))),
+    match: (p: string) => p === "/admin" || (p.startsWith("/admin/") && !["metrics", "calendars", "settings", "tasks"].some((r) => p.startsWith(`/admin/${r}`))),
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
         <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -47,6 +47,17 @@ const TOP_NAV = [
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
         <path d="M3 3v18h18" />
         <path d="M18 17V9M13 17V5M8 17v-4" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/tasks",
+    label: "Tareas",
+    match: (p: string) => p.startsWith("/admin/tasks"),
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <path d="M9 11l3 3L22 4" />
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
       </svg>
     ),
   },

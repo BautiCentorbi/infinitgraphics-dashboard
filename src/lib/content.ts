@@ -1,4 +1,4 @@
-import type { Platform, ContentStatus, ContentFormat, TaskPriority } from "@/generated/prisma/enums";
+import type { Platform, ContentStatus, ContentFormat, TaskPriority, TaskStatus } from "@/generated/prisma/enums";
 
 export const PLATFORM_LABELS: Record<Platform, string> = {
   instagram: "Instagram",
@@ -87,4 +87,24 @@ export const PRIORITY_ORDER: Record<TaskPriority, number> = {
   high: 0,
   medium: 1,
   low: 2,
+};
+
+// Estado de tareas — mismo orden que la declaración del enum en el schema
+// (pending/in_progress/done), que es también el orden de columnas del
+// kanban de tareas.
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  pending: "Pendiente",
+  in_progress: "En progreso",
+  done: "Hecha",
+};
+
+export const TASK_STATUSES = Object.keys(TASK_STATUS_LABELS) as TaskStatus[];
+
+// Reusa la paleta de .status-* que ya existe para ContentPiece (pending ~
+// draft, in_progress ~ en revisión/celeste, done ~ aprobado/teal) — ver
+// globals.css.
+export const TASK_STATUS_CLASS: Record<TaskStatus, string> = {
+  pending: "status-pending",
+  in_progress: "status-in_progress",
+  done: "status-done",
 };

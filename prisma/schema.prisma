@@ -155,13 +155,22 @@ enum TaskPriority {
   high
 }
 
+// Orden de declaración == orden de columnas del kanban de tareas y orden
+// por default al listar (pending/in_progress antes que done) — Postgres
+// ordena enums por posición de declaración, no alfabéticamente.
+enum TaskStatus {
+  pending
+  in_progress
+  done
+}
+
 model Task {
   id       String @id @default(cuid())
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
   clientId String
 
   title    String
-  done     Boolean      @default(false)
+  status   TaskStatus   @default(pending)
   dueDate  DateTime?
   priority TaskPriority @default(medium)
 

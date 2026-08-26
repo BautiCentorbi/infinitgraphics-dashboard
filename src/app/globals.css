@@ -267,6 +267,15 @@
 .status-published { background: oklch(0.75 0.15 190 / 0.18); color: oklch(0.87 0.08 190); }
 .status-published .d { background: oklch(0.75 0.15 190); }
 
+/* ---- Badges de estado (tareas) — misma paleta que arriba, mapeada a las
+   3 columnas del kanban de tareas (pending/in_progress/done). ---- */
+.status-pending { background: oklch(1 0 0 / 0.08); color: var(--text-dim); }
+.status-pending .d { background: var(--text-dim); }
+.status-in_progress { background: oklch(0.72 0.15 215 / 0.16); color: oklch(0.85 0.08 215); }
+.status-in_progress .d { background: var(--sky); }
+.status-done { background: oklch(0.72 0.12 195 / 0.18); color: oklch(0.87 0.08 195); }
+.status-done .d { background: var(--teal); }
+
 /* ---- Grano sutil (login) ---- */
 .grain { position: absolute; inset: 0; opacity: 0.05; mix-blend-mode: overlay; pointer-events: none;
   background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 3px 3px; }
