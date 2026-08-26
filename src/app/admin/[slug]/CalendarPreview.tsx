@@ -17,7 +17,7 @@ export function CalendarPreview({ slug, pieces }: { slug: string; pieces: Previe
         <h2 className="text-xs font-bold tracking-wide uppercase" style={{ color: "var(--text-faint)" }}>
           Próximo contenido
         </h2>
-        <Link href={`/admin/${slug}/calendar`} className="text-xs font-semibold" style={{ color: "var(--sky)" }}>
+        <Link href={`/admin/${slug}/calendar`} className="link-accent text-xs">
           Ver calendario →
         </Link>
       </div>

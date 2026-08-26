@@ -19,15 +19,17 @@ export async function POST(request: Request): Promise<NextResponse> {
           throw new Error("Solo el admin puede subir documentos.");
         }
         return {
+          // A pedido de Bautista (2026-08-21): solo estos 4 formatos, nada
+          // más — antes aceptaba de todo (doc/xls viejos, txt, imágenes,
+          // zip). Tamaño máximo (2MB) se valida del lado del cliente en
+          // DocumentsSection.tsx, antes de llamar upload() — Blob no recibe
+          // el archivo acá, solo emite el token, así que no hay forma de
+          // validar tamaño en este endpoint.
           allowedContentTypes: [
             "application/pdf",
-            "application/msword",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "application/vnd.ms-excel",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "text/plain",
-            "image/*",
-            "application/zip",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
           ],
           addRandomSuffix: true,
         };

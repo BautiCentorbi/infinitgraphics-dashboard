@@ -5,7 +5,7 @@ import { createTask, type TaskFormState } from "./actions";
 import { PRIORITIES, PRIORITY_LABELS } from "@/lib/content";
 
 const initialState: TaskFormState = { error: null };
-const inputCls = "rounded-[11px] border bg-black/20 px-3 py-2 text-sm outline-none focus:border-[var(--sky)]";
+const inputCls = "rounded-[11px] border border-[var(--border)] bg-black/20 px-3 py-2 text-sm outline-none transition-colors hover:border-[var(--border-strong)] focus:border-[var(--sky)]";
 
 export function NewTaskForm({ clientId, slug }: { clientId: string; slug: string }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -24,16 +24,15 @@ export function NewTaskForm({ clientId, slug }: { clientId: string; slug: string
         placeholder="Nueva tarea"
         required
         className={`w-full ${inputCls}`}
-        style={{ borderColor: "var(--border)" }}
       />
       <div className="flex flex-wrap gap-2">
         <input
           name="dueDate"
           type="date"
           className={`min-w-0 flex-1 ${inputCls}`}
-          style={{ borderColor: "var(--border)", colorScheme: "dark" }}
+          style={{ colorScheme: "dark" }}
         />
-        <select name="priority" defaultValue="medium" className={inputCls} style={{ borderColor: "var(--border)" }}>
+        <select name="priority" defaultValue="medium" className={`${inputCls} select-field`}>
           {PRIORITIES.map((p) => (
             <option key={p} value={p}>
               {PRIORITY_LABELS[p]}

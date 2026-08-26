@@ -92,7 +92,7 @@ export function PiecePreview({
           </svg>
           {piece.comments.length}
         </span>
-        <motion.button whileTap={{ scale: 0.94 }} onClick={onEdit} className="text-[12px] font-bold" style={{ color: "var(--sky)" }}>
+        <motion.button whileTap={{ scale: 0.94 }} onClick={onEdit} className="link-accent text-[12px]">
           Editar →
         </motion.button>
       </div>

@@ -218,6 +218,257 @@ código.
   artifact de Claude Design — sirve de referencia visual si hay que diseñar
   pantallas nuevas (analytics) en la misma identidad.
 
+### Realineación a bcentorbi.com (2026-08-24)
+
+A pedido de Bautista: que cm-suite se sienta parte del mismo universo visual
+que `bcentorbi.com` (su portfolio/marca — Infinite Graphics), ya que la app
+es una extensión operativa de esa identidad. **Sigue dark-first** — eso no
+se reconsideró, solo se realinearon acento, tipografía y la interacción de
+los botones:
+
+- **Acento:** `--sky`/`--blue` en `globals.css` ahora son el azul real de
+  bcentorbi.com (`#3080ff` / `#155dfc`, sus `blue-500`/`blue-600` — mismo
+  azul que ya se usaba como puente en los mails, ver sección de Resend más
+  abajo). `--amber`/`--teal` se desaturaron un poco para no competir con ese
+  azul. Nuevo token `--ease: cubic-bezier(.4,0,.2,1)` (el easing que usa
+  bcentorbi.com en todas sus transiciones) — reemplazó los `ease`/bezier
+  sueltos de cada componente.
+- **Botones:** `.btn-grad` dejó de ser un gradiente animado (shift de
+  `background-position`) y pasó a ser sólido + pill (`border-radius:999px`),
+  con hover de elevación + opacidad (`translateY(-2px)`, `opacity`,
+  cambio de tono) — el mismo lenguaje de micro-interacción que los botones
+  de bcentorbi.com. Nuevo `.btn-ghost` (mismo pill/hover, sin relleno) para
+  acciones secundarias. `--grad` (usado en `avatar-ring`/`tab-indicator`,
+  no en botones) pasó a gradiente de dos tonos (sky→blue), sin el ámbar que
+  tenía antes.
+- **Tipografía:** `layout.tsx` reemplazó Bricolage Grotesque/Plus Jakarta
+  Sans por **Syne** (display/títulos) + **Darker Grotesque** (body) —
+  las mismas familias que usa bcentorbi.com. Darker Grotesque es angosta/
+  liviana por diseño, así que el body quedó en `font-weight: 500` (no 400)
+  para no perder legibilidad en la UI densa de la app (tablas, formularios).
+- **Alcance deliberadamente NO tocado:** el fondo sigue oscuro (no se pasó a
+  claro como bcentorbi.com — Bautista lo confirmó explícitamente, la app es
+  de uso diario, no una landing), y los colores semánticos de
+  `.status-*` (draft/in_review/changes_requested/approved/scheduled/
+  published) se mantuvieron distinguibles a propósito, solo retocados en
+  tono para no chocar con el azul nuevo.
+- Todo el cambio vive en `globals.css` + `layout.tsx` (tokens y clases
+  reutilizables) — no se tocó el markup de los ~26 archivos que usan
+  `.btn-grad`/`.tabs`/`.status-pill`, siguiendo el mismo patrón de sistema
+  de componentes centralizado que ya describe esta sección.
+
+**Ajuste (mismo día):** la primera versión de `.btn-grad`/`.btn-ghost`
+(elevación + opacidad) no era el efecto real de bcentorbi.com. Corregido a
+lo que Bautista describió: botón **blanco** (`background: var(--text)`,
+texto oscuro `var(--bg)`) que al hover se **llena con un swipe de abajo
+hacia arriba** (`::before` con `transform: translateY(101%→0)`,
+`z-index:-1` dentro de un `isolation:isolate` para que quede recortado al
+botón) y el texto pasa a blanco (`color` con su propia transición). También
+se subió el tamaño de tipografía general: `html { font-size: 107.5% }` en
+`globals.css` (escala todo lo que está en `rem`, o sea casi toda la UI en
+Tailwind, sin tocar clase por clase) + los `font-size` en `px` de
+`.btn-grad`/`.btn-ghost`/`.tab`/`.status-pill` subidos un poco a mano —
+Darker Grotesque rinde más chica que una fuente estándar al mismo tamaño
+nominal.
+
+**Color del swipe (mismo día, segunda vuelta):** Bautista no quedó conforme
+con el azul de bcentorbi como color de relleno — en una app dark-first el
+mecanismo de contraste de bcentorbi no se traduce 1:1: ahí el negro es el
+color de máximo contraste porque el fondo es claro; acá el blanco ya cumple
+ese rol como estado default del botón, así que un relleno negro al hover
+"apagaría" el botón contra el fondo oscuro en vez de resaltarlo, y un
+relleno blanco (bordes blancos que se llenan de blanco) no cambia de tono,
+así que no se lee como acción primaria. Conclusión: el mecanismo (swipe +
+inversión de contraste) se puede copiar tal cual, pero el color de relleno
+tiene que ser el acento de marca, no el azul literal de bcentorbi.
+
+Se probaron 3 alternativas (índigo eléctrico / cian eléctrico / ámbar
+profundo) y Bautista eligió **ámbar profundo** — retoma el ámbar que ya era
+el contraste cálido de la identidad original de cm-suite (antes de este
+cambio). Nuevo token `--accent: oklch(0.64 0.19 48)` (+ `--accent-shadow`)
+en `globals.css`, **separado de `--amber`** (`oklch(0.78 0.13 65)`, que
+sigue usándose solo en el badge de estado "changes_requested"): `--accent`
+es más oscuro/saturado a propósito, por dos motivos — (1) necesita
+suficiente contraste para que el texto blanco del botón se siga leyendo
+encima, cosa que `--amber` (bastante claro) no daba, y (2) para que el
+botón primario y el badge de "cambios pedidos" no compitan por el mismo
+tono exacto y se confundan siendo los dos cálidos. `--blue`/`--sky` quedan
+igual que antes (links, tabs, estado "scheduled") — el cambio fue solo en
+el relleno de `.btn-grad`/`.btn-ghost`.
+
+**Dropdowns y botones secundarios (mismo día, tercera vuelta) — esto quedó
+firme, no se revirtió:**
+
+- **Dropdowns:** todos (los `<select>` nativos de `FilterBar`/`PieceModal`/
+  `NewTaskForm` y los propios de `StatusPicker`/`PriorityPicker`/
+  `CardFieldsMenu`) comparten hover — clase `.select-field` (hover de
+  borde + foco) para los `<select>`, y `.dd-trigger` (brillo + elevación
+  sutil, sin swipe) para los disparadores custom que no lo tenían.
+  **Gotcha real encontrado en el camino, útil para el futuro:** varios
+  `<select>`/`<input>` (`inputCls` en `PieceModal.tsx`/`NewTaskForm.tsx`,
+  y el pin/ítems del sidebar) tenían el color/fondo puesto por
+  `style={{ ... }}` en vez de una clase — un `style` inline gana siempre
+  sobre cualquier regla de CSS, `:hover` incluido, así que un `hover:` de
+  Tailwind agregado a la clase nunca se iba a ver. Se movieron esos
+  valores a `border-[var(--border)]`/`className` condicional (sacando el
+  `style` inline) para que `hover:`/`focus:` funcionen de verdad. Si se
+  agregan más campos con este patrón, no repetir el `style` inline para
+  bordes/colores que necesiten reaccionar a `:hover`/`:focus`.
+- **Botones secundarios tipo texto** ("Ver calendario →" en
+  `CalendarPreview`, "+ Subir" en `DocumentsSection`, "Editar →" en
+  `PiecePreview`) no tenían ningún estado de hover. Nueva clase
+  `.link-accent` en `globals.css` — hover **a propósito distinto** del
+  swipe de `.btn-grad`/`.btn-ghost`, que queda reservado para las acciones
+  primarias.
+- **Sidebar:** no tenía hover en ninguno de sus links (secciones del
+  panel, lista de clientes, sublinks de cliente, "Salir") — mismo gotcha
+  de arriba. Se agregó hover real en todos sin tocar qué color usa cada
+  estado.
+
+**Color del acento — vueltas 4 y 5, revertidas el mismo día:** después de
+elegir `--accent` (ámbar) para el swipe de los botones, se probó llevar
+ese mismo ámbar a más lugares — primero el fondo+texto de "seleccionado"
+en el sidebar, después (a pedido explícito) **todo** el resto de la app
+que todavía usaba `--sky`/`--blue` (texto, íconos, gradientes, bordes de
+foco, dots de estado, blobs del login — retiñendo directamente los
+tokens `--sky`/`--blue` en `:root` para no editar archivo por archivo).
+Bautista probó el resultado y decidió volver atrás: **el ámbar queda
+únicamente en el relleno de `.btn-grad`/`.btn-ghost`** (el swipe al
+hover) — todo lo demás volvió a azul tal cual estaba antes de esta
+sesión (`--sky: #3080ff`, `--blue: #155dfc`, sin retinte). Los tokens
+`--accent-bg`/`--accent-border` que se habían agregado para el
+"seleccionado" ámbar del sidebar se eliminaron (quedaron sin uso al
+revertir). **Si se vuelve a tocar el acento de la app, no dar por hecho
+que "más ámbar" es lo que se quiere** — ya se probó dos veces en la misma
+sesión y se revirtió las dos veces; confirmar alcance antes de expandirlo
+más allá de los botones.
+`src/lib/email.ts` nunca se tocó en ninguna de estas vueltas — los mails
+transaccionales (Resend) usan `#155dfc` a propósito, documentado más abajo
+en la sección de Resend: es la identidad de bcentorbi.com/Infinite
+Graphics aplicada solo a los mails (fondo claro), un sistema aparte del
+dark-first de la app.
+
+**Sub-ítems de cliente en el sidebar (mismo día, sexta vuelta):**
+Workspace/Tareas/Documentación/Notas/Calendario (bajo cada cliente activo
+en la lista) tenían el activo en `--sky` (azul) — primer pedido de
+Bautista fue que el activo pase a blanco, con como mucho un toque de azul
+al hover. Nuevo token `--text-hover: oklch(0.87 0.035 230)` en
+`globals.css` (blanco con apenas un tinte de temperatura fría, no "azul"
+perceptible) para ese hover sutil — se mantiene, reusar este token si
+hace falta el mismo efecto "apenas tibio" en otro lado.
+
+**Ajuste (mismo día, séptima vuelta):** Bautista aclaró que el patrón que
+quiere es el mismo en **todo** el menú lateral (secciones del panel arriba
+y sub-ítems de cliente abajo): **claro por defecto, azul cuando está
+seleccionado, azul (el mismo `--text-hover` sutil) al hacer hover** — no
+"nunca azul salvo hover" como se había entendido en la vuelta anterior.
+Los sub-ítems volvieron a `text-[var(--sky)]` cuando están activos (antes
+en blanco), y el color por defecto (no activo, no hover) pasó de
+`--text-faint` a `--text-dim` (un poco más claro, "blanco o clarito" en
+palabras de Bautista) para las 4 secciones (Workspace/Tareas/Documentación
+/Notas) y el link de Calendario. Las secciones generales del panel
+(`TOP_NAV`) ya seguían este mismo patrón sin cambios (default `--text-dim`,
+activo con ícono `--sky`).
+
+**Ajuste (mismo día, octava vuelta) — causa real encontrada de "todo se ve
+azul" en el sidebar:** Bautista insistió en que TODO el texto por defecto
+del menú lateral (no solo los sub-ítems) se veía azul, no solo lo
+seleccionado. La sospecha de caché de la vuelta anterior era incorrecta —
+había una causa real: `--text-dim`/`--text-faint` (usados en toda la app
+para texto secundario) tienen **hue 275**, que en la rueda de color cae del
+lado azul-violeta — heredado de la paleta fría original de cm-suite (todos
+los grises de la app, `--bg`/`--surface`/`--text` incluidos, se definieron
+sobre ese mismo hue a propósito, ver la nota de "Identidad visual"
+2026-08-21). Con chroma baja (0.02) no debería notarse, pero a esta
+luminosidad en dark mode ese tinte se percibe como azulado — más aún
+después de tantas vueltas mirando específicamente "qué es azul y qué no".
+
+Se agregaron dos tokens **100% neutros** (`hue 0`, sin ningún tinte) en
+`globals.css`: `--text-dim-plain: oklch(0.75 0 0)` y `--text-faint-plain:
+oklch(0.55 0 0)` — misma luminosidad que `--text-dim`/`--text-faint`, pero
+sin nada de color. Se aplicaron **solo dentro de `Sidebar.tsx`**
+(deliberadamente acotado al menú lateral, no a toda la app — no se tocaron
+`--text-dim`/`--text-faint` globales ni su uso en el resto de los
+componentes): pin no fijado, ítems de `TOP_NAV` (texto + ícono default +
+ícono en hover), fila de cada cliente, label "Tus clientes", botón
+"Salir". Si en algún otro lugar de la app se reporta el mismo efecto
+("esto se ve azul pero no debería"), esta es la causa más probable a
+revisar primero — no asumir caché.
+
+Los sub-ítems de cliente (Workspace/Tareas/Documentación/Notas/Calendario)
+quedaron: **blanco por defecto** (`var(--text)`, no `--text-dim-plain` —
+Bautista pidió "blanco" explícitamente esta vez, no "clarito"), **azul
+tanto en hover como en seleccionado** (`var(--sky)` en los dos casos, ya
+no el tinte sutil `--text-hover` de la vuelta anterior — ese token quedó
+sin uso y se eliminó de `globals.css`). Si se necesita ese mismo patrón
+"blanco / azul sólo en hover-o-activo" en otra lista de la app, replicar
+esta combinación (`text-[var(--text)]` default,
+`hover:text-[var(--sky)]`, activo en `text-[var(--sky)]`).
+
+**Ajuste (mismo día, novena vuelta):** el texto default de `TOP_NAV`
+(Clientes/Métricas/Calendarios/Configuración) había quedado en
+`--text-dim-plain` (gris neutro, sin tinte azul, pero no "blanco") — 
+Bautista pidió expresamente blanco ahí también, igual que en los
+sub-ítems. Pasó a `text-[var(--text)]`. El ícono default sigue en
+`--text-faint-plain` (no se tocó, no era parte del pedido) y el activo
+sigue exactamente igual (`bg-[var(--surface-2)]` + ícono `--sky`) — sigue
+siendo lo único "destacado", ahora con más contraste porque el texto de
+alrededor es uniformemente blanco. La fila de cada cliente (nombre, ej.
+"Bodega iMatorras") no se tocó en esta vuelta — sigue en
+`--text-dim-plain` (gris neutro) por default, no fue parte de lo pedido.
+
+**Ajuste (mismo día, décima vuelta):** faltaba que el texto (no solo el
+ícono) del ítem seleccionado de `TOP_NAV` se viera azul, y que ese azul
+apareciera únicamente cuando la ruta coincide con ese nav — no al hacer
+hover. Antes el texto activo estaba en `text-[var(--text)]` (blanco,
+igual que el resto) y solo el ícono cambiaba a `--sky`; ahora el texto
+activo también es `text-[var(--sky)]`. El hover de los no-activos sigue
+siendo solo `hover:bg-[var(--surface-2)]` (resalta el fondo, no el
+texto) — el azul queda exclusivamente atado a `active` (comparación de
+ruta), nunca a `:hover`.
+
+**Bug real (mismo día, undécima vuelta) — causa de fondo de varias
+"vueltas" anteriores:** después de la décima vuelta, Bautista reportó que
+TODOS los ítems del nav volvían a verse azules, estuvieran activos, en
+hover, o ninguna de las dos cosas — no era un problema de qué clase usar
+en cada estado, era **cascada de CSS**. `globals.css` tenía
+`a { color: var(--sky); ... }` escrito SUELTO (fuera de cualquier
+`@layer`), después de `@import "tailwindcss"`. En CSS Cascade Layers, una
+regla sin capa le gana SIEMPRE a cualquier regla dentro de una capa, sin
+importar especificidad — y las clases de Tailwind (incluidas las
+arbitrarias, `text-[var(--sky)]`/`text-[var(--text)]`) viven en
+`@layer utilities`. Como cada ítem del nav es un `<Link>` (renderiza
+`<a>`), ese `a{color}` suelto los forzaba a azul sin importar qué
+className tuvieran — por eso ningún ajuste de clases en `Sidebar.tsx`
+lograba nada de forma consistente.
+
+**Fix:** todo `globals.css` se reestructuró en `@layer base` (estilos de
+elementos HTML puros: `html`, `body`, `h1-h3`, `a`) y `@layer components`
+(todas las clases reutilizables: `.btn-grad`, `.btn-ghost`, `.surface`,
+`.link-accent`, `.dd-trigger`, `.select-field`, `.card-anim`,
+`.avatar-ring`, `.tabs`/`.tab`/`.tab-indicator`, `.status-*`, `.bg-blobs`,
+`.bg-app`, `.grain`) — así quedan en el orden de capas que ya establece
+Tailwind (`theme, base, components, utilities`) y cualquier clase de
+utilidad los puede pisar normalmente, como se espera. **Regla para el
+futuro: cualquier CSS nuevo que se agregue a este archivo (selector de
+elemento o clase reutilizable) va dentro de uno de estos dos `@layer`,
+nunca suelto** — dejarlo suelto reintroduce exactamente este bug,
+silencioso y difícil de diagnosticar porque el className en el JSX se ve
+perfectamente correcto.
+
+**Ajuste (mismo día, duodécima vuelta):** el `html{font-size:107.5%}` de
+la vuelta 1 escala todo lo que está en `rem` parejo, pero Bautista señaló
+puntualmente que `text-sm`/`text-base` (los tamaños más usados en toda la
+UI — labels, botones, texto de tabla) seguían sintiéndose chicos.
+Overrides en `@theme inline` (`globals.css`): `--text-sm: 0.9375rem`
+(antes 0.875rem) y `--text-base: 1.0625rem` (antes 1rem), cada uno con su
+`--text-*--line-height` a juego — esto redefine lo que generan las
+clases `text-sm`/`text-base` de Tailwind en **toda la app**, sin tocar
+componente por componente. Verificado en el CSS generado por el build
+(`.text-sm{font-size:.9375rem}`, `.text-base{font-size:1.0625rem}`).
+**`--text-xs` no se tocó a propósito** (badges/labels chicos) — no
+subirlo sin que se pida explícitamente.
+
 ### Micro-interacciones del calendario (2026-08-21)
 
 - **Hover-preview** (`PiecePreview.tsx`): en Calendario/Kanban, hacer hover
