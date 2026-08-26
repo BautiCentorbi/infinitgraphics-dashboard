@@ -2,6 +2,8 @@
 
 import { motion } from "motion/react";
 import { PLATFORM_LABELS, FORMAT_LABELS } from "@/lib/content";
+import { isVideoUrl } from "@/lib/media";
+import { VideoThumbnail } from "@/components/VideoThumbnail";
 import { StatusPicker } from "./StatusPicker";
 import type { ContentStatus } from "@/generated/prisma/enums";
 import type { Piece } from "./types";
@@ -17,6 +19,7 @@ export function PiecePreview({
   anchorRect,
   onEdit,
   onChangeStatus,
+  onOpenMedia,
   onMouseEnter,
   onMouseLeave,
 }: {
@@ -24,16 +27,17 @@ export function PiecePreview({
   anchorRect: DOMRect;
   onEdit: () => void;
   onChangeStatus: (status: ContentStatus) => void;
+  onOpenMedia: (url: string) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
-  const width = 280;
+  const width = piece.mediaUrl ? 320 : 280;
   const margin = 10;
   let left = anchorRect.right + margin;
   if (left + width > window.innerWidth - 12) {
     left = Math.max(12, anchorRect.left - width - margin);
   }
-  const top = Math.min(anchorRect.top, window.innerHeight - 320);
+  const top = Math.min(anchorRect.top, window.innerHeight - (piece.mediaUrl ? 460 : 320));
 
   return (
     <motion.div
@@ -61,6 +65,34 @@ export function PiecePreview({
         {piece.format && ` · ${FORMAT_LABELS[piece.format]}`} · {new Date(piece.scheduledDate).toLocaleDateString("es-AR")}
         {piece.topic && ` · ${piece.topic.name}`}
       </p>
+
+      {piece.mediaUrl && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenMedia(piece.mediaUrl as string);
+          }}
+          className="group relative mb-2.5 block w-full overflow-hidden rounded-[12px]"
+          style={{ background: "var(--surface-3)" }}
+          title="Ver en grande"
+        >
+          {isVideoUrl(piece.mediaUrl) ? (
+            <VideoThumbnail src={piece.mediaUrl} className="h-36 w-full object-cover" />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={piece.mediaUrl} alt="" className="h-36 w-full object-cover" />
+          )}
+          <span
+            className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100"
+            style={{ background: "oklch(0 0 0 / 0.35)" }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+            </svg>
+          </span>
+        </button>
+      )}
 
       <div className="mb-2.5">
         <StatusPicker value={piece.status} onChange={onChangeStatus} />
