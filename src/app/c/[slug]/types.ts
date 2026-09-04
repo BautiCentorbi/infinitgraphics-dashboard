@@ -5,7 +5,7 @@ export type PieceComment = {
   body: string;
   createdAt: string; // ISO
   authorEmail: string;
-  authorRole: "admin" | "client";
+  authorRole: "owner" | "admin" | "client";
 };
 
 export type ClientPiece = {

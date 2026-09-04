@@ -27,6 +27,14 @@ export function NewClientForm() {
         </button>
       </div>
       {state.error && <p className="text-sm text-red-400">{state.error}</p>}
+      {/* Admin acotado sin permiso de alta directa (User.canCreateClients):
+          no se creó, queda pendiente de que el owner lo apruebe (ver
+          src/app/admin/actions.ts, createClient). */}
+      {state.requested && (
+        <p className="text-sm" style={{ color: "var(--amber)" }}>
+          Solicitud enviada — le avisamos por mail al owner. Se crea cuando lo apruebe.
+        </p>
+      )}
     </form>
   );
 }

@@ -6,9 +6,11 @@ import bcrypt from "bcryptjs";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
-// Crea (o actualiza la contraseña de) el único usuario admin, a partir de
-// ADMIN_EMAIL / ADMIN_PASSWORD en el entorno. Mismo patrón que el login de
-// agencia en cds-script/vercel-dashboard.
+// Crea (o actualiza la contraseña de) el owner único, a partir de
+// ADMIN_EMAIL / ADMIN_PASSWORD en el entorno — el owner ve/gestiona todo,
+// incluyendo invitar administradores acotados (ver CLAUDE.md,
+// "Administradores acotados", 2026-09-04; prisma/promote-owner.ts si hace
+// falta promover un usuario ya existente en vez de correr este seed).
 async function main() {
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
@@ -21,13 +23,13 @@ async function main() {
 
   const passwordHash = await bcrypt.hash(password, 10);
 
-  const admin = await prisma.user.upsert({
+  const owner = await prisma.user.upsert({
     where: { email },
-    update: { passwordHash, role: "admin" },
-    create: { email, passwordHash, role: "admin" },
+    update: { passwordHash, role: "owner" },
+    create: { email, passwordHash, role: "owner" },
   });
 
-  console.log(`Admin listo: ${admin.email}`);
+  console.log(`Owner listo: ${owner.email}`);
 }
 
 main()

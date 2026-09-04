@@ -80,10 +80,14 @@ const APP_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : "http://localhost:3000";
 
-// Avisa a todos los admins cuando el cliente comenta, aprueba o pide
-// cambios en una pieza — a todos, sin importar quién la haya cargado (ver
-// charla con Bautista, 2026-08-21).
+// Avisa a quien gestiona este cliente cuando el cliente comenta, aprueba o
+// pide cambios en una pieza: el owner (siempre, ve todo) + los admins
+// acotados que tengan este cliente asignado (ver AdminClientAccess,
+// CLAUDE.md "Administradores acotados", 2026-09-04). Antes era "todos los
+// admins sin importar cliente" — ya no aplica porque un admin acotado no
+// debería enterarse de actividad de clientes que no le corresponden.
 export async function notifyAdminsOfClientActivity({
+  clientId,
   clientName,
   clientSlug,
   pieceTitle,
@@ -91,6 +95,7 @@ export async function notifyAdminsOfClientActivity({
   action,
   commentBody,
 }: {
+  clientId: string;
   clientName: string;
   clientSlug: string;
   pieceTitle: string;
@@ -98,8 +103,13 @@ export async function notifyAdminsOfClientActivity({
   action: "comment" | "approved" | "changes_requested";
   commentBody?: string;
 }) {
-  const admins = await prisma.user.findMany({ where: { role: "admin" }, select: { email: true } });
-  if (admins.length === 0) return;
+  const recipients = await prisma.user.findMany({
+    where: {
+      OR: [{ role: "owner" }, { role: "admin", clientAccess: { some: { clientId } } }],
+    },
+    select: { email: true },
+  });
+  if (recipients.length === 0) return;
 
   const actionLabel = {
     comment: "dejó un comentario en",
@@ -121,10 +131,10 @@ export async function notifyAdminsOfClientActivity({
   );
 
   const subject = `${clientName} ${actionLabel} "${pieceTitle}"`;
-  // Un envío por admin, no un solo mail con todos en "to" — así cada uno ve
-  // su propia copia (sin exponer el email de los demás) y no aparece en la
-  // bandeja como un mail "para X y N más" con el desplegable de Gmail.
-  await Promise.all(admins.map((a) => sendEmail(a.email, subject, html)));
+  // Un envío por destinatario, no un solo mail con todos en "to" — así cada
+  // uno ve su propia copia (sin exponer el email de los demás) y no aparece
+  // en la bandeja como un mail "para X y N más" con el desplegable de Gmail.
+  await Promise.all(recipients.map((r) => sendEmail(r.email, subject, html)));
   // pieceId no se usa en el link todavía (el calendario no tiene deep-link
   // a una pieza puntual) — queda como parámetro por si se agrega después.
   void pieceId;
@@ -139,14 +149,24 @@ export async function notifyNewAdmin({
   email,
   password,
   invitedByEmail,
+  clientNames,
 }: {
   email: string;
   password: string;
   invitedByEmail: string;
+  // Clientes que ya le asignaron al invitarlo — puede estar vacío si el
+  // owner todavía no le asignó ninguno (queda sin poder ver clientes hasta
+  // que se lo asignen desde /admin/settings).
+  clientNames: string[];
 }) {
+  const accessLine =
+    clientNames.length > 0
+      ? `Vas a poder ver y gestionar: <strong>${clientNames.join(", ")}</strong>.`
+      : `Todavía no tenés ningún cliente asignado — ${invitedByEmail} te va a dar acceso a los que correspondan.`;
+
   const html = wrapEmail(
     "Te agregaron como administrador en cm-suite",
-    `<p style="margin: 0 0 12px;">${invitedByEmail} te agregó como administrador — vas a poder ver y gestionar todos los clientes.</p>
+    `<p style="margin: 0 0 12px;">${invitedByEmail} te agregó como administrador. ${accessLine}</p>
      <p style="margin: 0 0 12px;">Entrá con estos datos:</p>
      <div style="background:#fafafa; border: 1px solid #f4f4f5; border-radius:10px; padding:12px 14px; margin: 0 0 12px;">
        <p style="margin: 0 0 4px; color: #171717;"><strong>Email:</strong> ${email}</p>
@@ -157,4 +177,49 @@ export async function notifyNewAdmin({
     "Entrar a cm-suite"
   );
   await sendEmail(email, "Te agregaron como administrador en cm-suite", html);
+}
+
+// Un admin acotado sin permiso de alta directa (User.canCreateClients)
+// pidió un cliente nuevo — avisa a todos los owners para que lo aprueben o
+// rechacen desde /admin/settings (ver ClientRequest en el schema).
+export async function notifyOwnersOfClientRequest({
+  requesterEmail,
+  clientName,
+}: {
+  requesterEmail: string;
+  clientName: string;
+}) {
+  const owners = await prisma.user.findMany({ where: { role: "owner" }, select: { email: true } });
+  if (owners.length === 0) return;
+
+  const html = wrapEmail(
+    "Solicitud de cliente nuevo",
+    `<p style="margin: 0 0 12px;">${requesterEmail} pidió dar de alta un cliente nuevo:</p>
+     <p style="margin: 0 0 12px; color: #171717; font-weight: 600;">${clientName}</p>
+     <p style="margin: 0;">Aprobalo o rechazalo desde Configuración.</p>`,
+    `${APP_URL}/admin/settings`,
+    "Revisar solicitud"
+  );
+  await Promise.all(owners.map((o) => sendEmail(o.email, `Solicitud de cliente: ${clientName}`, html)));
+}
+
+// Avisa al admin que pidió el cliente si el owner lo aprobó o rechazó.
+export async function notifyClientRequestResolved({
+  requesterEmail,
+  clientName,
+  approved,
+}: {
+  requesterEmail: string;
+  clientName: string;
+  approved: boolean;
+}) {
+  const html = wrapEmail(
+    approved ? "Tu solicitud fue aprobada" : "Tu solicitud fue rechazada",
+    approved
+      ? `<p style="margin:0;">Se creó el cliente <strong>${clientName}</strong> que pediste — ya lo tenés asignado.</p>`
+      : `<p style="margin:0;">Se rechazó tu pedido de alta del cliente <strong>${clientName}</strong>.</p>`,
+    approved ? `${APP_URL}/admin` : undefined,
+    approved ? "Ver clientes" : undefined
+  );
+  await sendEmail(requesterEmail, approved ? `Aprobado: ${clientName}` : `Rechazado: ${clientName}`, html);
 }

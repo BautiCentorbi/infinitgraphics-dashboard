@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireClientAccessBySlug } from "@/lib/access";
 import { NewNoteForm } from "./NewNoteForm";
 import { NoteItem } from "./NoteItem";
 import { NewTaskForm } from "./NewTaskForm";
@@ -20,6 +21,10 @@ export default async function ClientWorkspacePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  // Redirige a /admin si el cliente no existe o si es un admin acotado sin
+  // acceso a este cliente (ver src/lib/access.ts) — antes de tocar Prisma
+  // con nada más.
+  await requireClientAccessBySlug(slug);
   const client = await prisma.client.findUnique({ where: { slug } });
   if (!client) notFound();
 

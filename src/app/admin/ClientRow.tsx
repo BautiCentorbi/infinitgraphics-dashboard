@@ -8,9 +8,14 @@ import { AVATAR_GRADIENTS, initials } from "@/lib/avatar";
 export function ClientRow({
   client,
   index,
+  canDelete,
 }: {
   client: { id: string; name: string; slug: string; avatarUrl: string | null };
   index: number;
+  // Borrar es destructivo (cascada sobre todo lo del cliente) — solo el
+  // owner lo ve, aunque el admin acotado pueda renombrar (ver
+  // src/app/admin/actions.ts).
+  canDelete: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -65,22 +70,23 @@ export function ClientRow({
           <button onClick={() => setEditing(true)} style={{ color: "var(--text-dim)" }}>
             Renombrar
           </button>
-          {confirmingDelete ? (
-            <form action={deleteClient} className="flex items-center gap-1.5">
-              <input type="hidden" name="id" value={client.id} />
-              <span className="text-red-400">¿Borrar?</span>
-              <button type="submit" className="font-semibold text-red-400 underline">
-                Sí
+          {canDelete &&
+            (confirmingDelete ? (
+              <form action={deleteClient} className="flex items-center gap-1.5">
+                <input type="hidden" name="id" value={client.id} />
+                <span className="text-red-400">¿Borrar?</span>
+                <button type="submit" className="font-semibold text-red-400 underline">
+                  Sí
+                </button>
+                <button type="button" onClick={() => setConfirmingDelete(false)} style={{ color: "var(--text-faint)" }}>
+                  No
+                </button>
+              </form>
+            ) : (
+              <button onClick={() => setConfirmingDelete(true)} style={{ color: "var(--text-dim)" }}>
+                Borrar
               </button>
-              <button type="button" onClick={() => setConfirmingDelete(false)} style={{ color: "var(--text-faint)" }}>
-                No
-              </button>
-            </form>
-          ) : (
-            <button onClick={() => setConfirmingDelete(true)} style={{ color: "var(--text-dim)" }}>
-              Borrar
-            </button>
-          )}
+            ))}
         </div>
       </div>
 

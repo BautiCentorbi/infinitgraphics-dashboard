@@ -119,13 +119,13 @@ export function PieceDetail({
                 key={c.id}
                 className="max-w-[82%] rounded-[13px] px-3.5 py-2.5 text-[12.5px]"
                 style={
-                  c.authorRole === "admin"
+                  c.authorRole !== "client"
                     ? { background: "var(--surface-2)", borderBottomLeftRadius: 3 }
                     : { background: "var(--grad)", color: "white", marginLeft: "auto", borderBottomRightRadius: 3 }
                 }
               >
                 <p className="mb-0.5 text-[10px] font-bold opacity-70">
-                  {c.authorRole === "admin" ? "Community Manager" : "Vos"} · {new Date(c.createdAt).toLocaleString("es-AR")}
+                  {c.authorRole !== "client" ? "Community Manager" : "Vos"} · {new Date(c.createdAt).toLocaleString("es-AR")}
                 </p>
                 <p className="whitespace-pre-wrap">{c.body}</p>
               </div>

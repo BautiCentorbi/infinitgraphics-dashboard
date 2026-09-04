@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { del } from "@vercel/blob";
 import bcrypt from "bcryptjs";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { requireClientAccess, requireClientAccessBySlug, requireAdminSession } from "@/lib/access";
 import { listInstagramAccounts } from "@/lib/windsor";
 import type { TaskPriority, TaskStatus, Platform } from "@/generated/prisma/enums";
 
@@ -14,13 +14,17 @@ export type ClientUserFormState = { error: string | null };
 
 // Crea el login de un cliente (role=client, atado a este Client). Puede
 // haber más de uno por cliente (ej. dos personas del lado del cliente que
-// necesiten entrar). Ver ARCHITECTURE.md, "Roles y acceso".
+// necesiten entrar). Ver ARCHITECTURE.md, "Roles y acceso". Un admin
+// acotado puede hacer esto solo dentro de sus clientes asignados (ver
+// CLAUDE.md, "Administradores acotados").
 export async function createClientUser(
   _prevState: ClientUserFormState,
   formData: FormData
 ): Promise<ClientUserFormState> {
   const clientId = formData.get("clientId") as string;
   const slug = formData.get("slug") as string;
+  await requireClientAccess(clientId);
+
   const email = (formData.get("email") as string | null)?.trim().toLowerCase();
   const password = formData.get("password") as string | null;
 
@@ -45,6 +49,7 @@ export async function deleteClientUser(formData: FormData) {
   const id = formData.get("id") as string;
   const slug = formData.get("slug") as string;
   if (!id) return;
+  await requireClientAccessBySlug(slug);
 
   await prisma.user.delete({ where: { id } });
   revalidatePath(`/admin/${slug}`);
@@ -56,6 +61,8 @@ export async function createNote(
 ): Promise<NoteFormState> {
   const clientId = formData.get("clientId") as string;
   const slug = formData.get("slug") as string;
+  await requireClientAccess(clientId);
+
   const title = (formData.get("title") as string | null)?.trim();
   const body = (formData.get("body") as string | null) ?? "";
 
@@ -72,6 +79,7 @@ export async function updateNote(formData: FormData) {
   const title = (formData.get("title") as string | null)?.trim();
   const body = (formData.get("body") as string | null) ?? "";
   if (!id || !title) return;
+  await requireClientAccessBySlug(slug);
 
   await prisma.note.update({ where: { id }, data: { title, body } });
   revalidatePath(`/admin/${slug}`);
@@ -81,6 +89,7 @@ export async function deleteNote(formData: FormData) {
   const id = formData.get("id") as string;
   const slug = formData.get("slug") as string;
   if (!id) return;
+  await requireClientAccessBySlug(slug);
 
   await prisma.note.delete({ where: { id } });
   revalidatePath(`/admin/${slug}`);
@@ -94,6 +103,8 @@ export async function createTask(
 ): Promise<TaskFormState> {
   const clientId = formData.get("clientId") as string;
   const slug = formData.get("slug") as string;
+  await requireClientAccess(clientId);
+
   const title = (formData.get("title") as string | null)?.trim();
   const dueDateRaw = formData.get("dueDate") as string | null;
   const priority = (formData.get("priority") as TaskPriority | null) || "medium";
@@ -117,18 +128,21 @@ export async function createTask(
 // TaskStatus en el schema) — reemplazó al toggleTask viejo de "done"
 // booleano.
 export async function setTaskStatus(id: string, slug: string, status: TaskStatus) {
+  await requireClientAccessBySlug(slug);
   await prisma.task.update({ where: { id }, data: { status } });
   revalidatePath(`/admin/${slug}`);
   revalidatePath("/admin/tasks");
 }
 
 export async function setTaskPriority(id: string, slug: string, priority: TaskPriority) {
+  await requireClientAccessBySlug(slug);
   await prisma.task.update({ where: { id }, data: { priority } });
   revalidatePath(`/admin/${slug}`);
   revalidatePath("/admin/tasks");
 }
 
 export async function deleteTask(id: string, slug: string) {
+  await requireClientAccessBySlug(slug);
   await prisma.task.delete({ where: { id } });
   revalidatePath(`/admin/${slug}`);
   revalidatePath("/admin/tasks");
@@ -156,8 +170,7 @@ export async function createDocumentRecord({
   fileSize: number;
   mimeType: string | null;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) return null;
+  const session = await requireClientAccess(clientId);
 
   const doc = await prisma.document.create({
     data: {
@@ -168,7 +181,7 @@ export async function createDocumentRecord({
       fileName,
       fileSize,
       mimeType,
-      uploadedById: session.user.id,
+      uploadedById: session.id,
     },
   });
   revalidatePath(`/admin/${slug}`);
@@ -179,6 +192,7 @@ export async function deleteDocument(formData: FormData) {
   const id = formData.get("id") as string;
   const slug = formData.get("slug") as string;
   if (!id) return;
+  await requireClientAccessBySlug(slug);
 
   const doc = await prisma.document.findUnique({ where: { id } });
   if (!doc) return;
@@ -192,8 +206,11 @@ export async function deleteDocument(formData: FormData) {
 
 // Cuentas de Instagram ya conectadas en Windsor.ai (la conexión en sí se
 // hace en el dashboard de Windsor, fuera de esta app) — para el selector de
-// "a cuál de estas corresponde este cliente".
+// "a cuál de estas corresponde este cliente". No es específico de un
+// cliente (lista todas las cuentas de la agencia en Windsor), alcanza con
+// estar logueado como admin/owner.
 export async function getAvailableInstagramAccounts() {
+  await requireAdminSession();
   try {
     return await listInstagramAccounts();
   } catch {
@@ -214,6 +231,7 @@ export async function connectDataConnection({
   externalAccountId: string;
   accountName: string;
 }) {
+  await requireClientAccess(clientId);
   await prisma.dataConnection.upsert({
     where: { clientId_platform: { clientId, platform } },
     update: { externalAccountId, accountName },
@@ -223,6 +241,7 @@ export async function connectDataConnection({
 }
 
 export async function disconnectDataConnection(id: string, slug: string) {
+  await requireClientAccessBySlug(slug);
   await prisma.dataConnection.delete({ where: { id } });
   revalidatePath(`/admin/${slug}`);
 }

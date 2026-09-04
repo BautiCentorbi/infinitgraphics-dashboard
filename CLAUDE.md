@@ -745,6 +745,64 @@ dos apuntan al mismo deployment).
   propio, hay que sacar la contraseña de acá y mandar en su lugar un link
   de activación — no dejar las dos cosas conviviendo.
 
+## Administradores acotados: owner + admin (2026-09-04)
+
+A pedido de Bautista: poder invitar administradores que solo vean los
+clientes que él autorice, sin poder gestionar otros administradores ni
+tocar esos permisos. Ver ARCHITECTURE.md, "Roles y acceso", para el detalle
+completo — resumen acá:
+
+- **`UserRole` pasó de `admin`/`client` a `owner`/`admin`/`client`.**
+  `bcentorbi.designer@gmail.com` (el admin original, seedeado) se promovió a
+  `owner` con un script de un solo uso (`prisma/promote-owner.ts`, se deja
+  en el repo por si hace falta repetirlo en otro entorno). El seed
+  (`prisma/seed.ts`) ahora crea directamente un `owner`, no un `admin`.
+- **`AdminClientAccess`** (tabla nueva): qué clientes puede ver/operar un
+  `admin` acotado. El owner no tiene filas acá — accede a todos siempre.
+  `src/lib/access.ts` centraliza toda la verificación (`requireClientAccess`
+  /`requireClientAccessBySlug`/`accessibleClientIds`) y se llama tanto en
+  las páginas (`/admin/[slug]`, `/admin/[slug]/calendar`, `/admin/tasks`)
+  como al principio de **cada** server action que recibe un `clientId`/
+  `slug` — las actions son invocables directo, no alcanza con ocultar el
+  botón en la UI (antes ninguna action de `/admin/[slug]/*` verificaba nada,
+  confiaban en que el middleware ya había cortado el acceso a `/admin`; eso
+  dejó de alcanzar en cuanto "admin" dejó de significar "acceso total").
+- **`/admin/settings`** (gestión de administradores) pasó a ser exclusivo
+  del owner — bloqueado en `src/proxy.ts` a nivel de ruta, oculto en el
+  sidebar (`Sidebar.tsx`, prop `isOwner`), y cada server action de
+  `settings/actions.ts` lo re-verifica igual.
+- **Alta de clientes con permiso condicional** (pedido explícito de
+  Bautista: "que puedan solo si yo los autorizo, tanto desde el panel, como
+  una confirmación si deciden agregar algo"): `User.canCreateClients`
+  (default `false`) — el owner lo tildable por admin desde
+  `/admin/settings`. Si un admin sin ese permiso intenta crear un cliente
+  desde `/admin`, no se crea: queda como `ClientRequest` (`pending`) y le
+  llega un mail al owner (`notifyOwnersOfClientRequest`) para aprobar
+  (crea el cliente de verdad y se lo asigna a quien lo pidió) o rechazar
+  desde una sección nueva en `/admin/settings` (`PendingRequests.tsx`) — el
+  admin ve el resultado por mail (`notifyClientRequestResolved`) y sus
+  solicitudes pendientes en su propio `/admin` (`MyClientRequests.tsx`).
+- **Borrar/renombrar cliente:** renombrar y avatar quedaron permitidos para
+  cualquier admin con acceso a ese cliente (no es destructivo). **Borrar
+  un cliente quedó reservado al owner** (cascada sobre todo lo del
+  cliente — decisión tomada sin volver a preguntar, por ser la acción más
+  destructiva del set; revisar con Bautista si en algún momento hace falta
+  relajarlo).
+- **`notifyAdminsOfClientActivity`** (mail cuando el cliente comenta/aprueba/
+  pide cambios) dejó de mandarse a "todos los admins sin importar cliente"
+  — ahora va al owner + los admins acotados que tengan ese cliente
+  puntual asignado (`AdminClientAccess`), para no filtrar actividad de
+  clientes ajenos a un admin acotado.
+- **Prisma 7 + `prisma.config.ts`:** la migración de este cambio (agregar
+  `owner`, `AdminClientAccess`, `ClientRequest`) reveló que el datasource
+  `url`/`directUrl` en `schema.prisma` ya no es válido en Prisma 7 (se
+  configura en `prisma.config.ts`). Se agregó `DATABASE_URL_UNPOOLED` a
+  `.env` y `prisma.config.ts` lo usa para `prisma migrate` — el pooler de
+  Neon (PgBouncer transacción) no soporta bien los advisory locks que usa
+  Migrate. El runtime de la app (`src/lib/prisma.ts`) sigue usando el
+  pooled `DATABASE_URL` de siempre, sin cambios (ver charla del
+  2026-09-04 sobre performance/pooling).
+
 ## Pendiente de definir (no bloqueante, ver detalle en ARCHITECTURE.md)
 
 - Neon vs Vercel Postgres.
