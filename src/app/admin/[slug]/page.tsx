@@ -7,6 +7,7 @@ import { NoteItem } from "./NoteItem";
 import { NewTaskForm } from "./NewTaskForm";
 import { TaskBoard } from "./TaskBoard";
 import { ClientAccess } from "./ClientAccess";
+import { ShareLinkSection } from "./ShareLinkSection";
 import { DocumentsSection } from "./DocumentsSection";
 import { StatTiles } from "./StatTiles";
 import { CalendarPreview } from "./CalendarPreview";
@@ -80,6 +81,8 @@ export default async function ClientWorkspacePage({
         pendingTasks={pendingTasks}
         totalDocs={documents.length}
       />
+
+      <ShareLinkSection clientId={client.id} slug={client.slug} shareToken={client.shareToken} />
 
       <ClientAccess clientId={client.id} slug={client.slug} users={clientUsers} />
 
