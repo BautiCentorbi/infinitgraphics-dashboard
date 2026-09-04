@@ -22,7 +22,7 @@ export const authConfig = {
     session: ({ session, token }) => {
       if (session.user) {
         session.user.id = token.sub as string;
-        session.user.role = token.role as "admin" | "client";
+        session.user.role = token.role as "owner" | "admin" | "client";
         session.user.clientId = token.clientId as string | null;
         session.user.clientSlug = token.clientSlug as string | null;
       }

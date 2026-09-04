@@ -45,6 +45,7 @@ export async function addComment(
   });
 
   notifyAdminsOfClientActivity({
+    clientId: session.user.clientId,
     clientName: piece.client.name,
     clientSlug: piece.client.slug,
     pieceTitle: piece.title,
@@ -81,6 +82,7 @@ async function clientSetStatus(pieceId: string, slug: string, status: "approved"
   ]);
 
   notifyAdminsOfClientActivity({
+    clientId: session.user.clientId,
     clientName: piece.client.name,
     clientSlug: piece.client.slug,
     pieceTitle: piece.title,

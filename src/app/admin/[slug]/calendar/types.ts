@@ -5,7 +5,7 @@ export type PieceComment = {
   body: string;
   createdAt: string; // ISO
   authorEmail: string;
-  authorRole: "admin" | "client";
+  authorRole: "owner" | "admin" | "client";
 };
 
 // Piezas de contenido serializadas para pasar de server component a client

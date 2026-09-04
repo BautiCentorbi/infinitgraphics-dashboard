@@ -25,17 +25,38 @@ alcance de negocio. Este archivo se actualiza a medida que se implementa
 
 ## Roles y acceso
 
-Dos tipos de usuario:
+Tres tipos de usuario (`owner`/`admin` acotado agregados 2026-09-04 — antes
+solo existía `admin` con acceso total, ver más abajo):
 
-- **`admin`** (vos, Community Manager): un solo login, acceso a todos los
-  clientes y a todo dentro de cada uno (workspace, calendario, aprobar/editar
-  todo).
+- **`owner`** (vos): único, ve/gestiona todos los clientes y a todo dentro de
+  cada uno, y es el único que puede invitar/borrar administradores y decidir
+  qué clientes ve cada uno (`/admin/settings`).
+- **`admin`** (administrador acotado, invitado por el owner): solo ve/opera
+  los clientes que tiene asignados (`AdminClientAccess`) — workspace,
+  calendario, notas, tareas, documentos, logins de cliente, métricas dentro
+  de esos clientes. Nunca gestiona otros administradores ni ve
+  `/admin/settings`. Solo puede dar de alta un cliente nuevo directo si
+  `User.canCreateClients` está en `true` (lo decide el owner); si no, su
+  pedido queda como `ClientRequest` pendiente y le llega un mail al owner
+  para aprobar/rechazar (ver `src/lib/access.ts`, `src/app/admin/actions.ts`).
 - **`client`**: login propio, acotado a **un solo cliente** (el suyo). Ve el
   calendario de contenido de su cliente y puede comentar / aprobar piezas.
   No ve el workspace interno del CM (notas, tareas) ni otros clientes.
 
-Login simple email+password por ahora (ya definido). Sin roles adicionales
-(editor, viewer, etc.) en el MVP — se agregan si hace falta más adelante.
+Login simple email+password por ahora (ya definido). Sin roles más finos
+dentro de `admin` (por cliente, editor/viewer, etc.) — se agregan si hace
+falta más adelante.
+
+**Dónde se verifica el acceso acotado:** el middleware (`src/proxy.ts`) solo
+distingue owner/admin/client a nivel de ruta (`/admin/*` vs `/c/[slug]`, y
+`/admin/settings` solo owner) porque corre en Edge sin Prisma. La
+verificación real de "¿este admin puede ver/operar este cliente puntual?"
+vive en `src/lib/access.ts` (`requireClientAccess`/`requireClientAccessBySlug`)
+y se llama tanto al principio de cada página (`/admin/[slug]`,
+`/admin/[slug]/calendar`) como al principio de cada server action que
+recibe un `clientId`/`slug` — las actions son endpoints invocables directo,
+no alcanza con que la UI oculte el botón (mismo criterio que ya se usaba
+para `/c/[slug]`, ver más abajo en este archivo).
 
 ---
 

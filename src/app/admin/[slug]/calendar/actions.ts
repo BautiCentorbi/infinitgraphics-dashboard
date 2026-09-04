@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { requireClientAccess, requireClientAccessBySlug } from "@/lib/access";
 import type { Platform, ContentStatus, ContentFormat } from "@/generated/prisma/enums";
 
 export type PieceFormState = { error: string | null };
@@ -24,11 +24,10 @@ export async function createContentPiece(
   _prevState: PieceFormState,
   formData: FormData
 ): Promise<PieceFormState> {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Sesión inválida." };
-
   const clientId = formData.get("clientId") as string;
   const slug = formData.get("slug") as string;
+  const session = await requireClientAccess(clientId);
+
   const { title, platform, format, scheduledDateRaw, copy, hashtags, mediaUrl, internalNotes, topicId } =
     readPieceFields(formData);
 
@@ -47,7 +46,7 @@ export async function createContentPiece(
       mediaUrl,
       internalNotes,
       topicId,
-      createdById: session.user.id,
+      createdById: session.id,
     },
   });
 
@@ -59,11 +58,10 @@ export async function updateContentPiece(
   _prevState: PieceFormState,
   formData: FormData
 ): Promise<PieceFormState> {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Sesión inválida." };
-
   const id = formData.get("id") as string;
   const slug = formData.get("slug") as string;
+  const { session } = await requireClientAccessBySlug(slug);
+
   const status = formData.get("status") as ContentStatus | null;
   const { title, platform, format, scheduledDateRaw, copy, hashtags, mediaUrl, internalNotes, topicId } =
     readPieceFields(formData);
@@ -95,7 +93,11 @@ export async function updateContentPiece(
       },
     }),
     ...(newStatus
-      ? [prisma.approvalEvent.create({ data: { contentPieceId: id, status: newStatus, changedById: session.user.id } })]
+      ? [
+          prisma.approvalEvent.create({
+            data: { contentPieceId: id, status: newStatus, changedById: session.id },
+          }),
+        ]
       : []),
   ]);
 
@@ -105,6 +107,7 @@ export async function updateContentPiece(
 
 // Usado por el drag & drop de la vista calendario: solo cambia la fecha.
 export async function reschedulePiece(id: string, slug: string, scheduledDateISO: string) {
+  await requireClientAccessBySlug(slug);
   await prisma.contentPiece.update({
     where: { id },
     data: { scheduledDate: new Date(scheduledDateISO) },
@@ -115,13 +118,12 @@ export async function reschedulePiece(id: string, slug: string, scheduledDateISO
 // Usado por el drag & drop del kanban: cambia el status y deja registro en
 // ApprovalEvent (auditoría de quién movió qué y cuándo).
 export async function changePieceStatus(id: string, slug: string, status: ContentStatus) {
-  const session = await auth();
-  if (!session?.user?.id) return;
+  const { session } = await requireClientAccessBySlug(slug);
 
   await prisma.$transaction([
     prisma.contentPiece.update({ where: { id }, data: { status } }),
     prisma.approvalEvent.create({
-      data: { contentPieceId: id, status, changedById: session.user.id },
+      data: { contentPieceId: id, status, changedById: session.id },
     }),
   ]);
   revalidatePath(`/admin/${slug}/calendar`);
@@ -131,6 +133,7 @@ export async function deleteContentPiece(formData: FormData) {
   const id = formData.get("id") as string;
   const slug = formData.get("slug") as string;
   if (!id) return;
+  await requireClientAccessBySlug(slug);
 
   await prisma.contentPiece.delete({ where: { id } });
   revalidatePath(`/admin/${slug}/calendar`);
@@ -142,6 +145,8 @@ export async function createTopic(
 ): Promise<PieceFormState> {
   const clientId = formData.get("clientId") as string;
   const slug = formData.get("slug") as string;
+  await requireClientAccess(clientId);
+
   const name = (formData.get("name") as string | null)?.trim();
   if (!name) return { error: "El nombre es obligatorio." };
 
@@ -159,6 +164,7 @@ export async function deleteTopic(formData: FormData) {
   const id = formData.get("id") as string;
   const slug = formData.get("slug") as string;
   if (!id) return;
+  await requireClientAccessBySlug(slug);
 
   await prisma.topic.delete({ where: { id } });
   revalidatePath(`/admin/${slug}/calendar`);
@@ -168,16 +174,15 @@ export async function addAdminComment(
   _prevState: PieceFormState,
   formData: FormData
 ): Promise<PieceFormState> {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Sesión inválida." };
+  const slug = formData.get("slug") as string;
+  const { session } = await requireClientAccessBySlug(slug);
 
   const pieceId = formData.get("pieceId") as string;
-  const slug = formData.get("slug") as string;
   const body = (formData.get("body") as string | null)?.trim();
   if (!body) return { error: "Escribí algo antes de comentar." };
 
   await prisma.comment.create({
-    data: { contentPieceId: pieceId, authorId: session.user.id, body },
+    data: { contentPieceId: pieceId, authorId: session.id, body },
   });
 
   revalidatePath(`/admin/${slug}/calendar`);

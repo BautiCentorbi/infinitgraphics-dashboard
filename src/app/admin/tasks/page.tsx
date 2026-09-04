@@ -1,10 +1,17 @@
 import { prisma } from "@/lib/prisma";
+import { requireAdminSession, accessibleClientIds } from "@/lib/access";
 import { GlobalTaskBoard } from "./GlobalTaskBoard";
 
 export const dynamic = "force-dynamic";
 
+// Cruza todos los clientes — un admin acotado solo debe ver los suyos acá
+// también (ver src/lib/access.ts).
 export default async function GlobalTasksPage() {
+  const session = await requireAdminSession();
+  const allowedIds = await accessibleClientIds(session.id, session.role);
+
   const tasks = await prisma.task.findMany({
+    where: allowedIds ? { clientId: { in: allowedIds } } : undefined,
     // status asc sigue el orden del enum (pending, in_progress, done).
     orderBy: [{ status: "asc" }, { priority: "desc" }, { dueDate: "asc" }],
     include: { client: { select: { id: true, name: true, slug: true, avatarUrl: true } } },

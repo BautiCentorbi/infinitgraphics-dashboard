@@ -8,9 +8,21 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Prisma 7: la URL de conexión para el CLI (migrate, studio, etc.) se
+  // configura en prisma.config.ts, no acá. El runtime de la app tampoco usa
+  // esto — usa el driver adapter en src/lib/prisma.ts directamente.
 }
 
+// owner: vos, dueño de la cuenta — único, ve/gestiona todo (todos los
+// clientes, administra administradores y sus permisos).
+// admin: administrador acotado, invitado por el owner — solo ve/opera los
+// clientes que tiene asignados en AdminClientAccess, y solo puede crear
+// clientes nuevos si el owner le dio ese permiso (User.canCreateClients);
+// si no, su alta de cliente queda como ClientRequest pendiente de
+// aprobación. Nunca gestiona otros administradores.
+// client: login del cliente final, acotado a un solo Client.
 enum UserRole {
+  owner
   admin
   client
 }
@@ -49,14 +61,67 @@ model User {
   role         UserRole
 
   // Solo se completa para usuarios role = client: a qué cliente pertenece.
-  // Los admin ven todos los clientes, no están atados a uno.
+  // Los admin/owner ven clientes (todos u acotados, ver AdminClientAccess),
+  // no están atados a uno.
   client   Client? @relation(fields: [clientId], references: [id])
   clientId String?
+
+  // Solo relevante para role = admin: si puede dar de alta clientes nuevos
+  // directo o si su alta queda como ClientRequest pendiente de aprobación
+  // del owner. Sin efecto para owner (siempre puede) ni client.
+  canCreateClients Boolean @default(false)
 
   comments        Comment[]
   contentPieces   ContentPiece[]  @relation("ContentPieceCreatedBy")
   approvalEvents  ApprovalEvent[]
   documents       Document[]
+
+  // Solo relevante para role = admin: a qué clientes tiene acceso (ver
+  // AdminClientAccess). El owner no usa esto — accede a todos siempre.
+  clientAccess AdminClientAccess[]
+
+  clientRequests         ClientRequest[] @relation("ClientRequestedBy")
+  resolvedClientRequests ClientRequest[] @relation("ClientRequestResolvedBy")
+
+  createdAt DateTime @default(now())
+}
+
+// Qué clientes puede ver/operar un administrador acotado (role=admin). El
+// owner tiene acceso implícito a todos los clientes — no genera filas acá.
+model AdminClientAccess {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, clientId])
+}
+
+enum ClientRequestStatus {
+  pending
+  approved
+  denied
+}
+
+// Alta de cliente pedida por un admin sin User.canCreateClients — queda acá
+// hasta que el owner la aprueba (crea el Client de verdad) o la rechaza.
+// Dispara mail al owner al crearse (ver src/lib/email.ts).
+model ClientRequest {
+  id     String              @id @default(cuid())
+  name   String
+  status ClientRequestStatus @default(pending)
+
+  requestedBy   User   @relation("ClientRequestedBy", fields: [requestedById], references: [id], onDelete: Cascade)
+  requestedById String
+
+  resolvedBy   User?     @relation("ClientRequestResolvedBy", fields: [resolvedById], references: [id])
+  resolvedById String?
+  resolvedAt   DateTime?
 
   createdAt DateTime @default(now())
 }
@@ -74,6 +139,7 @@ model Client {
   topics           Topic[]
   documents        Document[]
   dataConnections  DataConnection[]
+  adminAccess      AdminClientAccess[]
 
   createdAt DateTime @default(now())
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireClientAccessBySlug } from "@/lib/access";
 import { CalendarApp } from "./CalendarApp";
 import type { Piece } from "./types";
 
@@ -12,6 +13,7 @@ export default async function ClientCalendarPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  await requireClientAccessBySlug(slug);
   const client = await prisma.client.findUnique({ where: { slug } });
   if (!client) notFound();
 

@@ -92,8 +92,12 @@ const TOP_NAV = [
 // cliente activo según la ruta actual se auto-expande mostrando sus
 // secciones (Tareas/Documentación/Notas son anchors dentro de la misma
 // página de workspace, ver ids en admin/[slug]/page.tsx).
-export function Sidebar({ clients }: { clients: ClientLite[] }) {
+export function Sidebar({ clients, isOwner }: { clients: ClientLite[]; isOwner: boolean }) {
   const pathname = usePathname();
+  // "Configuración" (gestión de administradores y sus permisos) es
+  // exclusivo del owner — un admin acotado ni la ve en el menú (el proxy
+  // igual la bloquea si intenta entrar a mano, ver src/proxy.ts).
+  const topNav = isOwner ? TOP_NAV : TOP_NAV.filter((item) => item.href !== "/admin/settings");
   const [pinned, setPinned] = useState(false);
   const [hovering, setHovering] = useState(false);
 
@@ -187,7 +191,7 @@ export function Sidebar({ clients }: { clients: ClientLite[] }) {
       {/* Secciones generales del panel */}
       <div className="shrink-0 px-2.5 pb-2">
         <ul className="flex flex-col gap-0.5">
-          {TOP_NAV.map((item) => {
+          {topNav.map((item) => {
             const active = item.match(pathname);
             return (
               <li key={item.href}>
