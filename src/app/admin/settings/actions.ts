@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/access";
 import { notifyNewAdmin, notifyClientRequestResolved } from "@/lib/email";
 import { slugify, RESERVED_SLUGS } from "@/lib/slug";
+import { generateShareToken } from "@/lib/shareToken";
 
 export type AdminFormState = { error: string | null };
 
@@ -143,6 +144,7 @@ export async function approveClientRequest(formData: FormData) {
       data: {
         name: request.name,
         slug,
+        shareToken: generateShareToken(),
         adminAccess: { create: { userId: request.requestedById } },
       },
     }),

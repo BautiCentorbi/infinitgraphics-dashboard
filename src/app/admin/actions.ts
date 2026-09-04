@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { slugify, RESERVED_SLUGS } from "@/lib/slug";
 import { requireAdminSession, requireClientAccess } from "@/lib/access";
 import { notifyOwnersOfClientRequest } from "@/lib/email";
+import { generateShareToken } from "@/lib/shareToken";
 
 export async function signOutAction() {
   await signOut({ redirectTo: "/login" });
@@ -54,7 +55,7 @@ export async function createClient(
   if (!baseSlug) return { error: "Ese nombre no genera un slug válido." };
   const slug = await uniqueSlugFor(name);
 
-  const client = await prisma.client.create({ data: { name, slug } });
+  const client = await prisma.client.create({ data: { name, slug, shareToken: generateShareToken() } });
 
   // Si quien lo crea es un admin acotado (con permiso), se auto-asigna el
   // cliente que acaba de crear — si no, lo crearía y no podría verlo.
@@ -112,4 +113,17 @@ export async function deleteClient(formData: FormData) {
   // ese cliente — ver prisma/schema.prisma.
   await prisma.client.delete({ where: { id } });
   revalidatePath("/admin");
+}
+
+// Invalida el link público actual y genera uno nuevo — para cuando se
+// compartió por error o hace falta cortar el acceso de quien lo tenía (ver
+// ShareLinkSection.tsx, /admin/[slug]/page.tsx).
+export async function regenerateShareToken(clientId: string, slug: string) {
+  await requireClientAccess(clientId);
+  const client = await prisma.client.update({
+    where: { id: clientId },
+    data: { shareToken: generateShareToken() },
+  });
+  revalidatePath(`/admin/${slug}`);
+  return client.shareToken;
 }

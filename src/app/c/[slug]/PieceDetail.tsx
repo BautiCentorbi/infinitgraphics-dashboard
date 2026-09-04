@@ -16,10 +16,17 @@ export function PieceDetail({
   piece,
   slug,
   onClose,
+  interactive = true,
 }: {
   piece: ClientPiece;
   slug: string;
   onClose: () => void;
+  // false en el link público de solo lectura (/p/[token], sin login): se
+  // ven los comentarios existentes pero no hay forma de comentar ni de
+  // aprobar/pedir cambios — eso sigue requiriendo el login real de cliente
+  // en /c/[slug]. Ver CLAUDE.md, "Vista de solo lectura por link"
+  // (2026-09-04).
+  interactive?: boolean;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [pending, startTransition] = useTransition();
@@ -35,7 +42,8 @@ export function PieceDetail({
   // antes de que salga). En "aprobado" y "publicado" solo puede comentar.
   // "borrador" nunca llega acá — el cliente ni lo ve (ver /c/[slug]/page.tsx).
   const canReview =
-    piece.status === "in_review" || piece.status === "changes_requested" || piece.status === "scheduled";
+    interactive &&
+    (piece.status === "in_review" || piece.status === "changes_requested" || piece.status === "scheduled");
 
   return (
     <div className="fixed inset-0 z-20 flex items-center justify-center p-4" style={{ background: "oklch(0 0 0 / 0.55)", backdropFilter: "blur(2px)" }}>
@@ -135,15 +143,22 @@ export function PieceDetail({
             )}
           </div>
 
-          <form ref={formRef} action={formAction} className="mt-3.5 flex flex-col gap-2">
-            <input type="hidden" name="pieceId" value={piece.id} />
-            <input type="hidden" name="slug" value={slug} />
-            <textarea name="body" placeholder="Escribí un comentario..." rows={2} className={inputCls} style={{ borderColor: "var(--border)" }} />
-            <button type="submit" disabled={commentPending} className="btn-grad self-start">
-              {commentPending ? "Enviando..." : "Comentar"}
-            </button>
-            {state.error && <p className="text-sm text-red-400">{state.error}</p>}
-          </form>
+          {interactive && (
+            <form ref={formRef} action={formAction} className="mt-3.5 flex flex-col gap-2">
+              <input type="hidden" name="pieceId" value={piece.id} />
+              <input type="hidden" name="slug" value={slug} />
+              <textarea name="body" placeholder="Escribí un comentario..." rows={2} className={inputCls} style={{ borderColor: "var(--border)" }} />
+              <button type="submit" disabled={commentPending} className="btn-grad self-start">
+                {commentPending ? "Enviando..." : "Comentar"}
+              </button>
+              {state.error && <p className="text-sm text-red-400">{state.error}</p>}
+            </form>
+          )}
+          {!interactive && (
+            <p className="mt-3.5 text-xs" style={{ color: "var(--text-faint)" }}>
+              Vista de solo lectura — para comentar o aprobar hace falta entrar con una cuenta de cliente.
+            </p>
+          )}
         </div>
       </div>
 

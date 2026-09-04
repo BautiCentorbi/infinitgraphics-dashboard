@@ -132,6 +132,15 @@ model Client {
   slug      String  @unique
   avatarUrl String?
 
+  // Token de un link público de solo lectura (/p/[shareToken]) — mismo
+  // calendario que ve un cliente logueado (calendario/kanban/lista), sin
+  // login, pero sin poder comentar ni aprobar/pedir cambios (eso sigue
+  // requiriendo el login real, ver /c/[slug]). Nullable: se genera en
+  // código (src/lib/shareToken.ts), no vía @default de Prisma, para poder
+  // regenerarlo (revocar el viejo) sin tocar el schema. Ver CLAUDE.md,
+  // "Vista de solo lectura por link" (2026-09-04).
+  shareToken String? @unique
+
   users            User[]
   notes            Note[]
   tasks            Task[]

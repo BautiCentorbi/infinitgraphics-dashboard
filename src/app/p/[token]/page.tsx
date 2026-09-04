@@ -1,22 +1,29 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { ClientCalendarApp } from "./ClientCalendarApp";
-import { signOutAction } from "./actions";
-import type { ClientPiece } from "./types";
+import { ClientCalendarApp } from "@/app/c/[slug]/ClientCalendarApp";
+import type { ClientPiece } from "@/app/c/[slug]/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function ClientCalendarPage({
+// Link público de solo lectura — sin login, protegido únicamente por lo
+// impredecible del token (ver Client.shareToken, src/lib/shareToken.ts).
+// A propósito NO pasa por src/proxy.ts (el matcher solo cubre /admin y /c,
+// ver ese archivo) — esta ruta es pública por diseño. Mismas 3 vistas que
+// /c/[slug], pero interactive=false: sin comentar ni aprobar/pedir cambios
+// (eso sigue necesitando el login real). Ver CLAUDE.md, "Vista de solo
+// lectura por link" (2026-09-04).
+export default async function SharedCalendarPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ token: string }>;
 }) {
-  const { slug } = await params;
-  const client = await prisma.client.findUnique({ where: { slug } });
+  const { token } = await params;
+  const client = await prisma.client.findUnique({ where: { shareToken: token } });
   if (!client) notFound();
 
-  // Piezas en "draft" son trabajo interno del CM, todavía no compartido —
-  // el cliente solo ve desde que pasa a revisión en adelante.
+  // Mismo criterio que el login de cliente: "draft" es trabajo interno del
+  // CM todavía no compartido — un link público es aún menos confiable que
+  // un login, no debería ver menos que eso.
   const pieces = await prisma.contentPiece.findMany({
     where: { clientId: client.id, status: { not: "draft" } },
     include: {
@@ -65,16 +72,17 @@ export default async function ClientCalendarPage({
           </div>
           <span className="font-display text-[17px] font-bold">cm-suite</span>
         </div>
-        <form action={signOutAction}>
-          <button type="submit" className="text-sm underline" style={{ color: "var(--text-dim)" }}>
-            Salir
-          </button>
-        </form>
+        <span className="rounded-full px-2.5 py-1 text-[11px] font-bold" style={{ background: "var(--surface-2)", color: "var(--text-faint)" }}>
+          Vista de solo lectura
+        </span>
       </div>
 
       <div className="mx-auto max-w-4xl px-6 py-9">
-        <h1 className="mb-7 text-2xl font-bold tracking-tight font-display">Calendario — {client.name}</h1>
-        <ClientCalendarApp slug={slug} initialPieces={serialized} interactive />
+        <h1 className="mb-1.5 text-2xl font-bold tracking-tight font-display">Calendario — {client.name}</h1>
+        <p className="mb-7 text-sm" style={{ color: "var(--text-dim)" }}>
+          Compartido como link de solo lectura — para comentar o aprobar piezas hace falta un login de cliente.
+        </p>
+        <ClientCalendarApp slug={client.slug} initialPieces={serialized} interactive={false} />
       </div>
     </div>
   );

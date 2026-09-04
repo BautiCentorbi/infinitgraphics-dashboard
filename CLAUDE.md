@@ -745,6 +745,42 @@ dos apuntan al mismo deployment).
   propio, hay que sacar la contraseña de acá y mandar en su lugar un link
   de activación — no dejar las dos cosas conviviendo.
 
+## Vista de solo lectura por link + 3 vistas del lado cliente (2026-09-04)
+
+A pedido de Bautista: que se pueda compartir el calendario de un cliente
+por link, sin necesitar mail/login, pero sin poder modificar nada — y que
+tanto esa vista como la del cliente logueado tengan las mismas 3 vistas que
+ya tiene el admin (Calendario/Kanban/Lista), no solo la lista simple que
+había antes.
+
+- **`Client.shareToken`** (nullable, único): token de 24 bytes al azar en
+  base64url (`src/lib/shareToken.ts`, `generateShareToken`) — no es un
+  `@default` de Prisma a propósito, para poder regenerarlo (revocar el
+  link viejo) sin tocar el schema. Se genera al crear un cliente
+  (`createClient`, `approveClientRequest`) y se puede regenerar desde
+  `/admin/[slug]` (`ShareLinkSection.tsx` → `regenerateShareToken`). Los 3
+  clientes que ya existían se migraron con
+  `prisma/backfill-share-tokens.ts` (script de un solo uso, ya corrido).
+- **`/p/[token]`** (nueva ruta, pública): busca el `Client` por
+  `shareToken`, 404 si no existe. A propósito **no pasa por `src/proxy.ts`**
+  (el matcher del middleware solo cubre `/admin` y `/c`) — es pública por
+  diseño, protegida únicamente por lo impredecible del token. Mismo filtro
+  que `/c/[slug]`: nunca muestra piezas en `draft` (un link es todavía
+  menos confiable que un login).
+- **`ClientCalendarApp.tsx`** (`src/app/c/[slug]/`): reemplazó al viejo
+  `ClientCalendar.tsx` (una lista simple) — ahora las 3 vistas
+  (`views/ClientCalendarGrid.tsx`, `ClientKanbanView.tsx`,
+  `ClientListView.tsx`, versiones livianas y de solo lectura de las
+  vistas admin, sin drag & drop) compartidas entre `/c/[slug]` (logueado)
+  y `/p/[token]` (link público) — la única diferencia entre ambos modos es
+  la prop `interactive`.
+- **`interactive={false}`** en `PieceDetail.tsx`: oculta los botones de
+  aprobar/pedir cambios y el form de comentar (se siguen viendo los
+  comentarios existentes, para dar contexto) — comentar/aprobar sigue
+  requiriendo el login real de cliente en `/c/[slug]`, nunca el link
+  público. El banner de "pendientes de tu revisión" tampoco aparece sin
+  login (no tiene sentido pedirle acción a alguien sin cuenta).
+
 ## Administradores acotados: owner + admin (2026-09-04)
 
 A pedido de Bautista: poder invitar administradores que solo vean los
