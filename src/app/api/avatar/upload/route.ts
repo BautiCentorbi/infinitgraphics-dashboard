@@ -14,7 +14,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       request,
       onBeforeGenerateToken: async () => {
         const session = await auth();
-        if (session?.user?.role !== "admin") {
+        if (session?.user?.role !== "admin" && session?.user?.role !== "owner") {
           throw new Error("Solo el admin puede cambiar fotos de perfil.");
         }
         return {
